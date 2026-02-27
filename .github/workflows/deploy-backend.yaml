@@ -1,0 +1,159 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('lambda/requirements-test.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install test dependencies
+        run: |
+          cd lambda
+          pip install -r requirements-test.txt
+
+      - name: Run backend tests
+        run: |
+          cd lambda
+          pytest tests/test_auth_middleware.py -v
+          pytest tests/test_decimal_utils.py -v
+          pytest tests/test_response_utils.py -v
+          pytest tests/test_validation.py -v
+          pytest tests/test_products_handler.py -v
+          pytest tests/test_auth_middleware.py tests/test_decimal_utils.py tests/test_response_utils.py tests/test_validation.py tests/test_products_handler.py --cov --cov-report=xml --cov-report=html
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: lambda/htmlcov/
+
+  prepare-lambda:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Build auth Lambda Layer (bcrypt + PyJWT)
+        run: |
+          mkdir -p layers/auth-deps/python
+          docker run --rm \
+            --entrypoint /bin/bash \
+            -v "$PWD/layers/auth-deps":/var/task \
+            public.ecr.aws/lambda/python:3.11 \
+            -c "pip install bcrypt PyJWT -t python/"
+
+      - name: Package auth Lambda Layer
+        run: |
+          cd layers/auth-deps
+          zip -r ../../terraform/auth_layer.zip python
+
+      - name: Build shared utils Lambda Layer
+        run: |
+          mkdir -p layers/shared-utils/python
+          cp -r lambda/layers/python/shared_utils layers/shared-utils/python/
+
+      - name: Package shared utils Lambda Layer
+        run: |
+          cd layers/shared-utils
+          zip -r ../../terraform/shared_utils_layer.zip python
+
+      - name: Package Lambda functions
+        run: |
+          cd lambda/TransactionHandler && zip -r ../../terraform/transactions_handler_lambda_package.zip *.py
+          cd ../AdminPassword && zip -r ../../terraform/admin_password_lambda_package.zip .
+          cd ../ProductsHandler && zip -r ../../terraform/products_handler_lambda_package.zip *.py
+          cd ../DiscountsHandler && zip -r ../../terraform/discounts_handler_lambda_package.zip *.py
+          cd ../PaymentMethodsHandler && zip -r ../../terraform/payment_methods_handler_lambda_package.zip *.py
+          cd ../WebSocketHandler && zip -r ../../terraform/websocket_handler_lambda_package.zip *.py
+          cd ../EmailHandler && zip -r ../../terraform/emailhandler_lambda_package.zip *.py
+          cd ../LockHandler && zip -r ../../terraform/lockhandler_lambda_package.zip *.py
+          cd ../FeatureTogglesHandler && zip -r ../../terraform/featuretoggleshandler_lambda_package.zip *.py
+          cd ../PlantPassAccessHandler && zip -r ../../terraform/plantpassaccess_lambda_package.zip *.py
+
+      - name: Upload Lambda packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-packages
+          path: |
+            terraform/*.zip
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: prepare-lambda
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.2
+          terraform_wrapper: false
+
+      - name: Download Lambda packages
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-packages
+          path: terraform
+
+      - name: Terraform Init & Apply
+        working-directory: ./terraform
+        run: |
+          terraform init -input=false
+          terraform apply -auto-approve -input=false -lock-timeout=60s \
+            -var "transaction_lambda_zip_path=transactions_handler_lambda_package.zip" \
+            -var "admin_lambda_zip_path=admin_password_lambda_package.zip" \
+            -var "products_lambda_zip_path=products_handler_lambda_package.zip" \
+            -var "discounts_lambda_zip_path=discounts_handler_lambda_package.zip" \
+            -var "payment_methods_lambda_zip_path=payment_methods_handler_lambda_package.zip" \
+            -var "websocket_lambda_zip_path=websocket_handler_lambda_package.zip" \
+            -var "email_lambda_zip_path=emailhandler_lambda_package.zip" \
+            -var "lock_lambda_zip_path=lockhandler_lambda_package.zip" \
+            -var "feature_toggles_lambda_zip_path=featuretoggleshandler_lambda_package.zip" \
+            -var "plantpass_access_lambda_zip_path=plantpassaccess_lambda_package.zip" \
+            -var "auth_layer_zip_path=auth_layer.zip" \
+            -var "shared_utils_layer_zip_path=shared_utils_layer.zip" \
+            -var "reset_token_hash=${{ secrets.RESET_TOKEN_HASH }}" \
+            -var "sender_email=${{ secrets.SENDER_EMAIL }}" \
+            -var "uiuc_hort_club_email=${{ secrets.UIUC_HORT_CLUB_EMAIL }}"
+
+      - name: Output deployment info
+        working-directory: ./terraform
+        run: |
+          echo "Frontend Bucket: $(terraform output frontend_bucket_name)"
+          echo "CloudFront Distribution: $(terraform output cloudfront_distribution_id)"
+          echo "API Endpoint: $(terraform output api_endpoint)"

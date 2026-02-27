@@ -1,0 +1,55 @@
+name: Run Tests
+
+on:
+  pull_request:
+    branches:
+      - master
+      - main
+      - develop
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('lambda/requirements-test.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install test dependencies
+        run: |
+          cd lambda
+          pip install -r requirements-test.txt
+
+      - name: Run backend tests
+        run: |
+          cd lambda
+          pytest tests/test_auth_middleware.py -v
+          pytest tests/test_decimal_utils.py -v
+          pytest tests/test_response_utils.py -v
+          pytest tests/test_validation.py -v
+          pytest tests/test_products_handler.py -v
+          pytest tests/test_auth_middleware.py tests/test_decimal_utils.py tests/test_response_utils.py tests/test_validation.py tests/test_products_handler.py --cov --cov-report=xml --cov-report=html
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: lambda/htmlcov/
+
+      - name: Check test results
+        run: |
+          echo "✅ All tests passed!"
