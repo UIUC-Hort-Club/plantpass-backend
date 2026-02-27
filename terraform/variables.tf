@@ -76,11 +76,6 @@ variable "websocket_lambda_zip_path" {
   description = "Path to WebSocketHandler Lambda ZIP relative to Terraform working directory"
 }
 
-variable "reset_token_hash" {
-  type      = string
-  sensitive = true
-}
-
 variable "enable_custom_domain" {
   type        = bool
   default     = true

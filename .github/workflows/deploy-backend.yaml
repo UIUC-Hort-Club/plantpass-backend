@@ -146,10 +146,7 @@ jobs:
             -var "feature_toggles_lambda_zip_path=featuretoggleshandler_lambda_package.zip" \
             -var "plantpass_access_lambda_zip_path=plantpassaccess_lambda_package.zip" \
             -var "auth_layer_zip_path=auth_layer.zip" \
-            -var "shared_utils_layer_zip_path=shared_utils_layer.zip" \
-            -var "reset_token_hash=${{ secrets.RESET_TOKEN_HASH }}" \
-            -var "sender_email=${{ secrets.SENDER_EMAIL }}" \
-            -var "uiuc_hort_club_email=${{ secrets.UIUC_HORT_CLUB_EMAIL }}"
+            -var "shared_utils_layer_zip_path=shared_utils_layer.zip"
 
       - name: Output deployment info
         working-directory: ./terraform
