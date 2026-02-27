@@ -66,9 +66,9 @@ resource "aws_cloudfront_distribution" "frontend" {
   # Use ACM certificate for custom domain (or default CloudFront cert)
   # -------------------------
   viewer_certificate {
-    acm_certificate_arn      = var.enable_custom_domain ? aws_acm_certificate.cert.arn : null
-    ssl_support_method       = var.enable_custom_domain ? "sni-only" : null
-    minimum_protocol_version = var.enable_custom_domain ? "TLSv1.2_2021" : "TLSv1"
+    acm_certificate_arn            = var.enable_custom_domain ? aws_acm_certificate.cert.arn : null
+    ssl_support_method             = var.enable_custom_domain ? "sni-only" : null
+    minimum_protocol_version       = var.enable_custom_domain ? "TLSv1.2_2021" : "TLSv1"
     cloudfront_default_certificate = !var.enable_custom_domain
   }
 

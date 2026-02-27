@@ -194,10 +194,10 @@ resource "aws_lambda_function" "admin" {
 
   environment {
     variables = {
-      PASSWORD_BUCKET = aws_s3_bucket.admin_password.bucket
-      PASSWORD_KEY    = "password.json"
-      JWT_SECRET      = "super-secret-key"
-      EMAIL_LAMBDA_ARN = aws_lambda_function.email_handler.arn
+      PASSWORD_BUCKET     = aws_s3_bucket.admin_password.bucket
+      PASSWORD_KEY        = "password.json"
+      JWT_SECRET          = "super-secret-key"
+      EMAIL_LAMBDA_ARN    = aws_lambda_function.email_handler.arn
       TEMP_PASSWORD_TABLE = aws_dynamodb_table.temp_passwords.name
     }
   }
@@ -483,7 +483,7 @@ resource "aws_lambda_function" "email_handler" {
 
   environment {
     variables = {
-      SENDER_EMAIL          = var.sender_email
+      SENDER_EMAIL         = var.sender_email
       UIUC_HORT_CLUB_EMAIL = var.uiuc_hort_club_email
     }
   }

@@ -1,7 +1,7 @@
 resource "aws_dynamodb_table" "plantpass_access" {
-  name           = "PlantPass-Access"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "config_id"
+  name         = "PlantPass-Access"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "config_id"
 
   attribute {
     name = "config_id"
@@ -9,7 +9,6 @@ resource "aws_dynamodb_table" "plantpass_access" {
   }
 
   tags = {
-    Name        = "PlantPass-Access"
-    Environment = "production"
+    application = "plantpass"
   }
 }
