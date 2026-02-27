@@ -29,7 +29,7 @@ variable "transaction_lambda_zip_path" {
 
 variable "admin_lambda_zip_path" {
   type        = string
-  description = "Path to AdminPassword Lambda ZIP relative to Terraform working directory"
+  description = "Path to AdminAuthHandler Lambda ZIP relative to Terraform working directory"
 }
 
 variable "products_lambda_zip_path" {

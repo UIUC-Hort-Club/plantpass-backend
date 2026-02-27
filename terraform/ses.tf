@@ -25,7 +25,7 @@ resource "aws_iam_role_policy" "lambda_ses_access" {
   })
 }
 
-# IAM Policy for AdminPassword Lambda to invoke Email Lambda
+# IAM Policy for AdminAuthHandler Lambda to invoke Email Lambda
 resource "aws_iam_role_policy" "lambda_invoke_email" {
   name = "LambdaInvokeEmailLambda"
   role = aws_iam_role.lambda_exec.id

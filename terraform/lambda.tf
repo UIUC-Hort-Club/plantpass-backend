@@ -85,7 +85,7 @@ resource "aws_cloudwatch_log_group" "transaction_handler_logs" {
 }
 
 resource "aws_cloudwatch_log_group" "admin_logs" {
-  name              = "/aws/lambda/plantpass-admin"
+  name              = "/aws/lambda/AdminAuthHandler"
   retention_in_days = 14
 
   tags = {
@@ -179,7 +179,7 @@ resource "aws_lambda_function" "transaction_handler" {
 }
 
 resource "aws_lambda_function" "admin" {
-  function_name    = "plantpass-admin"
+  function_name    = "AdminAuthHandler"
   filename         = var.admin_lambda_zip_path
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.11"
