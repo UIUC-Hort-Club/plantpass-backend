@@ -38,7 +38,7 @@ plantpass-backend/
 │   ├── ProductsHandler/       # Product management
 │   ├── DiscountsHandler/      # Discount management
 │   ├── PaymentMethodsHandler/ # Payment method management
-│   ├── AdminPassword/         # Admin authentication
+│   ├── AdminAuthHandler/      # Admin authentication
 │   ├── PlantPassAccessHandler/# Staff access control
 │   ├── FeatureTogglesHandler/ # Feature toggle management
 │   ├── LockHandler/           # Resource locking
@@ -105,7 +105,7 @@ Lambda functions can be tested locally using the test suite. For integration tes
 - `GET /payment-methods` - List payment methods
 - `PUT /payment-methods` - Update payment methods
 
-### AdminPassword
+### AdminAuthHandler
 - `POST /admin/login` - Admin authentication
 - `POST /admin/password` - Update password
 - `POST /admin/reset-request` - Request password reset

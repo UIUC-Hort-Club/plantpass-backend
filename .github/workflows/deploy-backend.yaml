@@ -87,7 +87,7 @@ jobs:
       - name: Package Lambda functions
         run: |
           cd lambda/TransactionHandler && zip -r ../../terraform/transactions_handler_lambda_package.zip *.py
-          cd ../AdminPassword && zip -r ../../terraform/admin_password_lambda_package.zip .
+          cd ../AdminAuthHandler && zip -r ../../terraform/admin_password_lambda_package.zip .
           cd ../ProductsHandler && zip -r ../../terraform/products_handler_lambda_package.zip *.py
           cd ../DiscountsHandler && zip -r ../../terraform/discounts_handler_lambda_package.zip *.py
           cd ../PaymentMethodsHandler && zip -r ../../terraform/payment_methods_handler_lambda_package.zip *.py
