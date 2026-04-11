@@ -41,12 +41,18 @@ class Transaction:
     def _initialize_from_db(self):
         self.purchase_id = self.data.get("purchase_id")
         self.timestamp = self.data.get("timestamp")
-        self.items = self.data.get("items", [])
-        self.discounts = self.data.get("discounts", [])
+        raw_items = self.data.get("items")
+        self.items = raw_items if isinstance(raw_items, list) else []
+        raw_discounts = self.data.get("discounts")
+        self.discounts = raw_discounts if isinstance(raw_discounts, list) else []
         self.club_voucher = self.data.get("club_voucher", 0)
         self.customer_email = self.data.get("customer_email", "")
-        self.payment = self.data.get("payment", {"method": "", "paid": False})
-        self.receipt = self.data.get("receipt", {})
+        raw_payment = self.data.get("payment")
+        self.payment = (
+            raw_payment if isinstance(raw_payment, dict) else {"method": "", "paid": False}
+        )
+        raw_receipt = self.data.get("receipt")
+        self.receipt = raw_receipt if isinstance(raw_receipt, dict) else {}
         
         # Set payment_status based on payment.paid
         self.payment_status = "paid" if self.payment.get("paid") else "unpaid"
@@ -197,10 +203,15 @@ class Transaction:
         return cls(db_record, source="db")
     
     def get_summary(self):
+        receipt = self.receipt if isinstance(self.receipt, dict) else {}
+        payment = self.payment if isinstance(self.payment, dict) else {}
+        items = self.items if isinstance(self.items, list) else []
         return {
             "purchase_id": self.purchase_id,
             "timestamp": self.timestamp,
-            "total_quantity": sum(item.get("quantity", 0) for item in self.items),
-            "grand_total": self.receipt.get("total", 0),
-            "paid": self.payment.get("paid", False)
+            "total_quantity": sum(
+                (item.get("quantity", 0) if isinstance(item, dict) else 0) for item in items
+            ),
+            "grand_total": receipt.get("total", 0),
+            "paid": payment.get("paid", False)
         }

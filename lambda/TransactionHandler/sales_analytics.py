@@ -1,4 +1,5 @@
 import os
+import math
 import logging
 from datetime import datetime, timezone, timedelta
 from botocore.exceptions import ClientError
@@ -8,10 +9,39 @@ from transaction import Transaction
 
 CST = timezone(timedelta(hours=-6))
 
+# Epoch seconds upper bound ~ year 2100 — used to detect JS-style millisecond timestamps
+_MAX_REASONABLE_EPOCH_S = 4102444800  # 2100-01-01 UTC
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 table = get_table('TRANSACTIONS_TABLE', 'transactions')
+
+
+def _normalize_epoch_seconds(ts):
+    """
+    Convert stored timestamp to epoch seconds for datetime.fromtimestamp.
+    Handles millisecond/microsecond values from clients that used Date.now() without scaling.
+    Returns None if the value cannot be normalized to a valid instant.
+    """
+    if ts is None:
+        return None
+    try:
+        x = float(ts)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(x):
+        return None
+    # Collapse ms / µs / ns-style values (repeat until in "seconds" range)
+    while x > _MAX_REASONABLE_EPOCH_S:
+        x = x / 1000.0
+    if x <= 0 or x > _MAX_REASONABLE_EPOCH_S:
+        return None
+    try:
+        datetime.fromtimestamp(x, tz=CST)
+    except (OSError, ValueError, OverflowError):
+        return None
+    return x
 
 
 def compute_sales_analytics():
@@ -63,8 +93,8 @@ def compute_sales_analytics():
                 total_sales += summary["grand_total"]
                 total_units_sold += summary["total_quantity"]
                 
-                timestamp = transaction.timestamp
-                if timestamp:
+                timestamp = _normalize_epoch_seconds(transaction.timestamp)
+                if timestamp is not None:
                     dt = datetime.fromtimestamp(timestamp, tz=CST)
                     minute = 0 if dt.minute < 30 else 30
                     bucket_time = dt.replace(minute=minute, second=0, microsecond=0)
@@ -80,7 +110,12 @@ def compute_sales_analytics():
         average_order_value = total_sales / total_orders if total_orders > 0 else 0.0
         
         if paid_transactions:
-            timestamps = [t.timestamp for t in paid_transactions if t.timestamp]
+            timestamps = [
+                ts
+                for t in paid_transactions
+                for ts in [_normalize_epoch_seconds(t.timestamp)]
+                if ts is not None
+            ]
             if timestamps:
                 min_time = min(timestamps)
                 max_time = max(timestamps)
