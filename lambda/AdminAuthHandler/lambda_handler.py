@@ -6,6 +6,7 @@ import bcrypt
 import jwt
 import datetime
 from response_utils import create_response
+from dynamodb_client import get_table
 from temp_password_manager import (
     generate_temp_password,
     store_temp_password,
@@ -15,6 +16,9 @@ from temp_password_manager import (
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+FEATURE_TOGGLES_TABLE_ENV = "FEATURE_TOGGLES_TABLE_NAME"
+DEFAULT_PASSWORD_PROTECT_ADMIN = True
 
 s3 = boto3.client("s3")
 bucket = os.environ["PASSWORD_BUCKET"]
@@ -37,6 +41,21 @@ def set_password_hash(new_hash):
         Body=json.dumps({"admin_password_hash": new_hash.decode()})
     )
 
+
+def is_password_protect_admin_enabled():
+    """
+    Read feature toggle from DynamoDB. On error or missing item, default to True (require password).
+    """
+    try:
+        table = get_table(FEATURE_TOGGLES_TABLE_ENV, "PlantPass-FeatureToggles")
+        response = table.get_item(Key={"config_id": "feature_toggles"})
+        item = response.get("Item", {})
+        return bool(item.get("passwordProtectAdmin", DEFAULT_PASSWORD_PROTECT_ADMIN))
+    except Exception as e:
+        logger.warning("Could not read passwordProtectAdmin from DynamoDB: %s", e)
+        return True
+
+
 def lambda_handler(event, context):
     try:
         logger.info(f"=== Lambda Invoked ===")
@@ -50,6 +69,19 @@ def lambda_handler(event, context):
 
         if route_key == "POST /admin/login":
             logger.info("=== Admin Login Attempt ===")
+            if not is_password_protect_admin_enabled():
+                logger.info("Password protection disabled; issuing admin token without password check")
+                token = jwt.encode(
+                    {
+                        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24),
+                        "role": "admin",
+                        "iat": datetime.datetime.utcnow()
+                    },
+                    JWT_SECRET,
+                    algorithm="HS256"
+                )
+                return create_response(200, {"token": token, "requires_password_change": False})
+
             pw_hash = get_password_hash()
             password = body.get("password", "")
             
