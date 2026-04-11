@@ -153,6 +153,8 @@ resource "aws_lambda_function" "transaction_handler" {
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.11"
   role             = aws_iam_role.lambda_exec.arn
+  timeout          = 30
+  memory_size      = 256
   source_code_hash = filebase64sha256(var.transaction_lambda_zip_path)
   depends_on = [
     aws_cloudwatch_log_group.transaction_handler_logs
