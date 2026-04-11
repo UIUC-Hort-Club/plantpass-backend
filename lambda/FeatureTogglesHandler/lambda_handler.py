@@ -1,6 +1,7 @@
 import json
 import os
 import logging
+from decimal import Decimal
 from dynamodb_client import get_dynamodb_client
 from response_utils import create_response
 from auth_middleware import is_public_endpoint, extract_token, verify_token, AuthError
@@ -16,6 +17,22 @@ DEFAULT_FEATURES = {
     'passwordProtectAdmin': True,
     'protectPlantPassAccess': False
 }
+
+
+def _dynamo_bool(item, key, default):
+    """Normalize DynamoDB boolean fields (BOOL, legacy strings, or Decimal)."""
+    if key not in item:
+        return default
+    value = item[key]
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, Decimal):
+        return value != 0
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        return value.strip().lower() in ('true', '1', 'yes')
+    return default
 
 def lambda_handler(event, context):
     """
@@ -67,11 +84,16 @@ def get_feature_toggles():
         
         item = response.get('Item', {})
         
-        # Return stored features or defaults
         features = {
-            'collectEmailAddresses': item.get('collectEmailAddresses', DEFAULT_FEATURES['collectEmailAddresses']),
-            'passwordProtectAdmin': item.get('passwordProtectAdmin', DEFAULT_FEATURES['passwordProtectAdmin']),
-            'protectPlantPassAccess': item.get('protectPlantPassAccess', DEFAULT_FEATURES['protectPlantPassAccess'])
+            'collectEmailAddresses': _dynamo_bool(
+                item, 'collectEmailAddresses', DEFAULT_FEATURES['collectEmailAddresses']
+            ),
+            'passwordProtectAdmin': _dynamo_bool(
+                item, 'passwordProtectAdmin', DEFAULT_FEATURES['passwordProtectAdmin']
+            ),
+            'protectPlantPassAccess': _dynamo_bool(
+                item, 'protectPlantPassAccess', DEFAULT_FEATURES['protectPlantPassAccess']
+            ),
         }
         
         return create_response(200, features)

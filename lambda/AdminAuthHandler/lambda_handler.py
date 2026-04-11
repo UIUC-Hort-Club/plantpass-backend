@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from decimal import Decimal
 import boto3
 import bcrypt
 import jwt
@@ -21,6 +22,22 @@ FEATURE_TOGGLES_TABLE_ENV = "FEATURE_TOGGLES_TABLE_NAME"
 DEFAULT_PASSWORD_PROTECT_ADMIN = True
 
 s3 = boto3.client("s3")
+
+
+def _dynamo_bool(item, key, default):
+    """Normalize DynamoDB boolean fields (BOOL, legacy strings, or Decimal)."""
+    if key not in item:
+        return default
+    value = item[key]
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, Decimal):
+        return value != 0
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        return value.strip().lower() in ('true', '1', 'yes')
+    return default
 bucket = os.environ["PASSWORD_BUCKET"]
 key = os.environ["PASSWORD_KEY"]
 
@@ -50,7 +67,7 @@ def is_password_protect_admin_enabled():
         table = get_table(FEATURE_TOGGLES_TABLE_ENV, "PlantPass-FeatureToggles")
         response = table.get_item(Key={"config_id": "feature_toggles"})
         item = response.get("Item", {})
-        return bool(item.get("passwordProtectAdmin", DEFAULT_PASSWORD_PROTECT_ADMIN))
+        return _dynamo_bool(item, "passwordProtectAdmin", DEFAULT_PASSWORD_PROTECT_ADMIN)
     except Exception as e:
         logger.warning("Could not read passwordProtectAdmin from DynamoDB: %s", e)
         return True
