@@ -122,16 +122,27 @@ def compute_sales_analytics():
                 
                 current_time = datetime.fromtimestamp(min_time, tz=CST)
                 end_time = datetime.fromtimestamp(max_time, tz=CST)
-                
-                while current_time <= end_time:
-                    minute = 0 if current_time.minute < 30 else 30
-                    bucket_time = current_time.replace(minute=minute, second=0, microsecond=0)
-                    bucket_key = bucket_time.strftime("%m-%d-%Y %I:%M %p")
-                    
-                    if bucket_key not in sales_by_time_bucket:
-                        sales_by_time_bucket[bucket_key] = 0.0
-                    
-                    current_time += timedelta(minutes=30)
+                # Filling every 30-minute slot between min and max can be millions of iterations
+                # (e.g. bad or very spread timestamps) and exceed Lambda time limits. Cap backfill.
+                span_seconds = (end_time - current_time).total_seconds()
+                slot_count = int(span_seconds // 1800) + 1
+                max_backfill_slots = 25_000  # ~520 days at 30 min; chart still has real buckets from above
+                if slot_count > max_backfill_slots:
+                    logger.warning(
+                        "Sales analytics: skipping empty bucket backfill (%s slots exceeds cap %s)",
+                        slot_count,
+                        max_backfill_slots,
+                    )
+                else:
+                    while current_time <= end_time:
+                        minute = 0 if current_time.minute < 30 else 30
+                        bucket_time = current_time.replace(minute=minute, second=0, microsecond=0)
+                        bucket_key = bucket_time.strftime("%m-%d-%Y %I:%M %p")
+                        
+                        if bucket_key not in sales_by_time_bucket:
+                            sales_by_time_bucket[bucket_key] = 0.0
+                        
+                        current_time += timedelta(minutes=30)
         
         analytics = {
             "total_sales": round(total_sales, 2),
