@@ -300,27 +300,8 @@ output "api_endpoint" {
   description = "API Gateway endpoint for frontend and admin"
 }
 
-# -------------------------
-# Email Routes
-# -------------------------
-resource "aws_apigatewayv2_route" "email_receipt" {
-  api_id    = aws_apigatewayv2_api.frontend_api.id
-  route_key = "POST /email/receipt"
-  target    = "integrations/${aws_apigatewayv2_integration.email_lambda_integration.id}"
-}
-
-resource "aws_apigatewayv2_route" "email_password_reset" {
-  api_id    = aws_apigatewayv2_api.frontend_api.id
-  route_key = "POST /email/password-reset"
-  target    = "integrations/${aws_apigatewayv2_integration.email_lambda_integration.id}"
-}
-
-resource "aws_apigatewayv2_integration" "email_lambda_integration" {
-  api_id                 = aws_apigatewayv2_api.frontend_api.id
-  integration_type       = "AWS_PROXY"
-  integration_uri        = aws_lambda_function.email_handler.arn
-  payload_format_version = "2.0"
-}
+# The email Lambda has no API routes on purpose: it does no authentication and
+# is only invoked directly by the transaction and admin Lambdas.
 
 # -------------------------
 # Admin Forgot Password Route
