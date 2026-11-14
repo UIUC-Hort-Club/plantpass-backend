@@ -143,7 +143,9 @@ file in `plantpass-frontend/src/api/`; the type in `src/types/index.ts`.
 **A new Lambda** also needs: function, log group and permission in
 `terraform/lambda.tf`; a zip-path variable in `terraform/variables.tf`; a zip
 line **and** a `-var` line in `deploy-backend.yaml`. Miss the workflow lines
-and the deploy fails after merge.
+and the deploy fails after merge. For the local copy, add its folder to
+`HANDLERS` in `scripts/dev_server.py`, and any new table to `TABLES` there;
+the server refuses to start until both match the Terraform.
 
 **A field on the order:** `transaction.py` (`_initialize_from_json`,
 `_initialize_from_db` with a default for old records, `to_dict`); validation in

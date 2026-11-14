@@ -10,6 +10,7 @@ import re
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -25,11 +26,11 @@ def api():
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
         port = s.getsockname()[1]
+    # A file, not a pipe: nobody reads a pipe here, and the server would block
+    # once it had logged 64 KB of requests into one.
+    log = tempfile.TemporaryFile("w+")
     server = subprocess.Popen(
-        [sys.executable, str(SERVER), "--port", str(port)],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
+        [sys.executable, str(SERVER), "--port", str(port)], stdout=log, stderr=subprocess.STDOUT
     )
 
     def request(method, path, body=None, token=None):
@@ -49,7 +50,8 @@ def api():
     try:
         for _ in range(100):
             if server.poll() is not None:
-                pytest.fail(f"dev server exited at startup:\n{server.stdout.read()}")
+                log.seek(0)
+                pytest.fail(f"dev server exited at startup:\n{log.read()}")
             try:
                 request("GET", "/feature-toggles")
                 break

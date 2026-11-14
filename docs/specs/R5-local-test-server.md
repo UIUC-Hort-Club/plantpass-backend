@@ -53,7 +53,10 @@ Nothing. Developer tooling only.
 
 ## Ship plan
 
-Backend first, then frontend. The frontend deploy must still serve the
+Frontend first, then backend. The frontend change is safe alone (its dev
+config points at a port where nothing listens yet). The backend change is not:
+its docs say local development is safe, which is only true once the frontend
+no longer points at production. The frontend deploy must still serve the
 production URLs afterwards: check the live `config.js` after it deploys. Undo
 by reverting either PR; nothing deployed reads the new files.
 

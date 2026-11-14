@@ -3,18 +3,20 @@
 Local stand-in for the PlantPass API: the real Lambda handlers, a fake AWS.
 
     make dev                       # http://localhost:8787, seeded with sample data
-    python scripts/dev_server.py --port 9000 --empty
+    python scripts/dev_server.py --port 9000
 
 Requests are routed with the route keys in terraform/apigateway.tf and handed
 to the same lambda_handler functions production runs. DynamoDB and S3 are
 moto's in-memory fakes, so nothing is saved between runs and nothing can reach
-real AWS. Staff passphrase: "dev". Admin login needs no password.
+a real AWS account. Staff passphrase: "dev". Admin login needs no password.
 
 Development and tests only. Nothing here is deployed: the deploy workflow zips
 lambda/<Handler>/*.py and nothing else.
 
-Not covered: the WebSocket API and email sending (both are skipped), API
-Gateway's own behaviour (throttling, payload limits), and IAM.
+Not covered: the WebSocket API and email sending (both are skipped), the admin
+password flows (no password is stored, so turning on "password protect admin"
+locks you out until a restart), API Gateway's own behaviour (throttling,
+payload limits), and IAM.
 """
 import argparse
 import importlib
@@ -37,6 +39,7 @@ os.environ.update(
     AWS_ACCESS_KEY_ID="local-fake",
     AWS_SECRET_ACCESS_KEY="local-fake",
     AWS_DEFAULT_REGION="us-east-1",
+    AWS_REGION="us-east-1",  # some handlers pick their region from this one
     AWS_EC2_METADATA_DISABLED="true",
     JWT_SECRET="local-dev-server-secret-not-used-anywhere-real",
     PASSWORD_BUCKET="local-admin-password",
@@ -132,15 +135,10 @@ def check_tables_match_terraform():
 
 def start_fake_aws():
     check_tables_match_terraform()
-    try:
-        from moto import mock_aws  # moto 5
+    from moto import mock_dynamodb, mock_s3
 
-        mock_aws().start()
-    except ImportError:
-        from moto import mock_dynamodb, mock_s3  # moto 4
-
-        mock_dynamodb().start()
-        mock_s3().start()
+    mock_dynamodb().start()
+    mock_s3().start()
 
     import boto3
 
@@ -221,7 +219,6 @@ def call(method, path, body=None, headers=None, query=None):
     route_key, params = matched
     event = {
         "routeKey": route_key,
-        "rawPath": path,
         "headers": {k.lower(): v for k, v in (headers or {}).items()},
     }
     if params:
@@ -254,6 +251,8 @@ CORS = {
 
 
 class Handler(BaseHTTPRequestHandler):
+    timeout = 5  # one request at a time, so a silent connection must not block the rest
+
     def _respond(self, status, headers, text):
         payload = text.encode()
         self.send_response(status)
@@ -280,19 +279,17 @@ class Handler(BaseHTTPRequestHandler):
 
     do_GET = do_POST = do_PUT = do_DELETE = do_OPTIONS = _handle
 
-    def log_message(self, fmt, *args):
-        sys.stderr.write("%s %s\n" % (self.command, fmt % args))
-
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     parser.add_argument("--port", type=int, default=8787)
-    parser.add_argument("--empty", action="store_true", help="no sample products, discounts or payment methods")
     args = parser.parse_args()
 
+    unserved = {parts[0] for _, parts in ROUTES} - set(HANDLERS)
+    if unserved:
+        sys.exit(f"dev server: apigateway.tf has routes under {sorted(unserved)} but HANDLERS has no folder for them")
     start_fake_aws()
-    if not args.empty:
-        seed()
+    seed()
     server = HTTPServer(("127.0.0.1", args.port), Handler)
     print(f"PlantPass dev API on http://localhost:{args.port}  (staff passphrase: dev)", flush=True)
     try:

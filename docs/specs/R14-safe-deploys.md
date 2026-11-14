@@ -56,6 +56,11 @@ not real" bar on every screen, so nobody rings up a real customer there.
    Pin both packages, and commit the provider lock file. (Today the unpinned
    layer build has no effect, because layers never redeploy; roadmap R15 fixes
    that and must pin the versions in the same change.)
+9. **The frontend deploy refuses a localhost config.** The committed
+   `public/config.js` now points at the local dev server, and one workflow
+   step overwrites it for production. A guard before the upload
+   (`! grep -q localhost dist/config.js`) makes sure a future edit to that
+   workflow cannot put the localhost address on every volunteer's phone.
 
 ## Left out on purpose
 
