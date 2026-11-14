@@ -1,6 +1,6 @@
 # R14 — A test copy of the app, and deploys that are safe while it is in use
 
-Status: draft
+Status: approved 2026-11-14
 Roadmap item: R14
 
 ## Problem and evidence
@@ -21,7 +21,10 @@ Decision D9 and question Q7.
   deploy of PR #9 changed ten). One request made seconds after that deploy
   returned 500 and then succeeded on retry. The cause was not confirmed, but a
   deploy during an event should not be able to do that.
-- **There is no written way back,** and `main` can be pushed to directly.
+- **There is no written way back.** `main` is already guarded by a ruleset in
+  both repos ("Guardrail-Master": pull request required, squash only, no force
+  push, no deletion), but that ruleset does not require CI to pass, so a red
+  pull request can still be merged and deployed.
 - In 2026, fixes were merged the day before and the day of the sale.
 
 ## What the volunteer sees
@@ -50,7 +53,10 @@ not real" bar on every screen, so nobody rings up a real customer there.
 6. **Rollback is the same step run on the last good commit.** Written down in
    `ARCHITECTURE.md`. Works because of the standing rule that old orders must
    load in new code and new fields are additive.
-7. **`main` is protected:** changes arrive by pull request with CI passing.
+7. **A red pull request cannot be merged.** Done 2026-11-14 with the
+   architect's go-ahead: "the `test` check must pass" was added to the
+   existing "Guardrail-Master" ruleset in both repos. No approvals are
+   required, so agent merges under D10 still work.
 8. **Pinned build inputs.** The auth layer is built with an unpinned `pip
    install bcrypt PyJWT`, and the Terraform provider versions are not locked.
    Pin both packages, and commit the provider lock file. (Today the unpinned
@@ -101,21 +107,13 @@ test-on-merge and release-to-production with smoke tests, (4) plan-on-PR and
 branch protection. Target: live by mid-December 2026 so the club's testing
 window is not squeezed.
 
-## Questions for the architect
+## Decided
 
-1. **A second copy in the same AWS account, a few cents a month idle. OK?**
-   Recommendation: yes.
-2. **What address, and who controls DNS?** Recommendation:
-   `test.hortclubplantpass.org`. The Terraform mentions certificate validation
-   in Cloudflare; if DNS lives there, the architect adds two records by hand.
-3. **Should production release be automatic once the test copy passes, or a
-   deliberate step?** Recommendation: deliberate. It keeps D10's review gate
-   meaningful and lets the club test a version before it goes live.
-4. **May the agent turn on branch protection for `main` in both club repos**
-   (pull request and passing CI required)? It is a setting on the club's
-   GitHub organisation, so it needs an explicit yes.
-5. **After this ships, does the 14-day freeze shrink** (for example to the
-   event days plus two)? Recommendation: decide after the first sale run on
-   the new process.
-6. **Do club testers need their own admin password on the test copy?**
-   Recommendation: yes, a separate one, shared freely with testers.
+- A second copy in the same AWS account (D12).
+- It starts on the address AWS assigns; the nicer name only if testers want
+  it (D13).
+- Production release is a deliberate step, not automatic (D14).
+- "Tests must pass" is on the `main` ruleset in both repos (D15).
+- Assumed, not asked: the test copy has its own admin password and staff
+  passphrase; whether the freeze shrinks is decided after the first sale on
+  this process.

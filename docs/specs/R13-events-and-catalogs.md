@@ -1,6 +1,6 @@
 # R13 — Run any event, with its own products
 
-Status: draft
+Status: approved 2026-11-14
 Roadmap item: R13
 
 ## Problem and evidence
@@ -59,8 +59,9 @@ picker on the export.
 
 ## Changes
 
-- Data: `event` (string) on the order; a `current_event` row in the settings
-  table. Reading an order without `event` yields the 2026 sale. No new table.
+- Data: `event` (string) on the order, with an index on it; a `current_event`
+  row in the settings table. Reading an order without `event` yields the 2026
+  sale. No new table.
 - API: `GET/PUT` for the current event; `event` query parameter on export and
   analytics; `event` in order responses. The live frontend keeps working: all
   additions.
@@ -87,25 +88,20 @@ picker on the export.
 Backend first (additive), then frontend. Depends on R5 for testing. Undo by
 reverting; orders keep an `event` field the old code ignores.
 
-Known limit, to be marked in code: analytics and export read every order and
-then filter by event. Fine for a few thousand orders in total; add an index on
-`event` when the table passes roughly 10,000.
+Orders are indexed by event (one new index on the orders table), so the
+recent-unpaid list, analytics and export for an event read only that event's
+orders and stay fast as past events accumulate (D11).
 
-## Questions for the architect
+## Decided
 
-1. **Can two events ever run at the same time?** Recommendation: no, one
-   current event.
-2. **How long is a non-plant product list: tens or hundreds?** Up to about
-   forty fits the current checker screen. Beyond that the checker needs a
-   search box, which adds to the volunteer's screen and to this spec.
-3. **Do past events' orders stay in the app?** Recommendation: yes, kept and
-   exportable at any time, and "Clear Records" is removed from the console so
-   nobody can wipe an event by accident. Alternative: keep export-then-clear
-   and only add the event name.
-4. **Catalogs as CSV files the club keeps, or stored in the app per event?**
-   Recommendation: CSV.
-5. **Do discounts, vouchers or payment methods differ between events?**
-   Recommendation: assume not; same lists, edited before each event.
-6. **What should the non-plant events be called in the UI**, and is "PlantPass"
-   still the right name on the home screen for them? Recommendation: keep the
-   name and logo, show the event name under it.
+- One current event at a time (D17).
+- Assume about forty products or fewer; no search on the checker's screen
+  (D18).
+- Past events' orders are kept and exportable; "Clear Records" is removed from
+  the admin console (D19).
+- Product lists are CSV files in and out, and each event's export carries its
+  product list (D20). So the export gains a `products.csv`, written from a
+  copy of the list saved when the next event starts.
+- Assumed, not asked: discounts and payment methods are not per event; the
+  app keeps its name with the event name under it; orders are indexed by event
+  from the start rather than filtered after a full read.

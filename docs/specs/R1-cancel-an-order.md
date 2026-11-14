@@ -1,6 +1,6 @@
 # R1 — Cancel an order instead of faking a payment
 
-Status: draft
+Status: approved 2026-11-14
 Roadmap item: R1
 
 ## Problem and evidence
@@ -22,15 +22,17 @@ Order" button becomes "Cancel Order", in the same place, with the same
 confirmation dialog. No new field, no new button, no new decision.
 
 A cancelled order leaves the "recent unpaid" list at once. Looked up again by
-its ID it shows "Cancelled" and is view-only, like a completed order.
+its ID it shows "Cancelled", is view-only, and has one button, "Restore
+order", which puts it back in the unpaid list.
 
 Checker screen: no change. Customer receipt lookup: shows "Cancelled".
 
 ## Smallest version
 
 1. A third order state, `void`, next to `unpaid` and `paid`.
-2. `PUT /transactions/{id}` accepts `{"void": true}` for an unpaid order. A
-   paid order cannot be voided. No new route, so no Terraform change.
+2. `PUT /transactions/{id}` accepts `{"void": true}` for an unpaid order and
+   `{"void": false}` to restore a cancelled one to unpaid. A paid order
+   cannot be voided. No new route, so no Terraform change.
 3. Voided orders are left out of the recent-unpaid list (already true: the
    list asks the index for `unpaid`) and out of every total in analytics
    (already true: totals count paid orders only).
@@ -84,18 +86,10 @@ Backend first; it is additive and the live frontend ignores it. Then the
 frontend. Undo by reverting; an order voided in between would read as unpaid
 again to the old code, which is safe.
 
-## Questions for the architect
+## Decided
 
-1. **Does "Cancel Order" replace "Delete Order" on the cashier screen, or sit
-   beside it?** Recommendation: replace. Two red buttons that both make an
-   order disappear is a choice volunteers should not have to make, and delete
-   is the one that loses data. Deleting stays possible for an organizer
-   through the admin console.
-2. **Can a cancelled order be restored?** Recommendation: yes, with one
-   "Restore order" button on the cancelled order's view, which makes it
-   unpaid again. Without it, a mis-tap means re-entering the order, which is
-   the cost D7 was meant to avoid.
-3. **May an order be cancelled only while unpaid?** Recommendation: yes.
-4. **Should the customer's receipt page say "Cancelled"**, or simply "not
-   found"? Recommendation: "Cancelled", so a customer holding a slip gets an
-   answer.
+- "Cancel Order" replaces "Delete Order" on the cashier's screen (D21).
+- A cancelled order has one "Restore order" button that makes it unpaid
+  again (D22).
+- Assumed, not asked: an order can be cancelled only while unpaid; the
+  customer's receipt page says "Cancelled".
