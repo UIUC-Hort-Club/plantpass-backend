@@ -60,99 +60,33 @@ plantpass-backend/
 
 ## Development
 
-### Install Dependencies
-
 ```bash
-cd lambda
-pip install -r requirements-test.txt
+make check     # creates .venv, runs pytest, terraform fmt and terraform validate
+make test      # pytest only
+make help      # everything else
 ```
 
-### Run Tests
-
-```bash
-cd lambda
-pytest
-
-# Run specific tests
-pytest tests/test_products_handler.py -v
-
-# Generate coverage report
-pytest --cov --cov-report=html
-```
+Working with an AI agent, or new to the codebase: start with `AGENTS.md`, then
+`docs/PRODUCT.md` and `docs/ARCHITECTURE.md`. What is planned and what was
+declined is in `docs/ROADMAP.md`.
 
 ### Local Testing
 
-Lambda functions can be tested locally using the test suite. For integration testing with AWS services, use the AWS SAM CLI or deploy to a development environment.
+The test suite mocks AWS. There is no local or staging environment yet: nothing short of production runs a Lambda against DynamoDB. See `docs/ROADMAP.md`, item R5.
 
-## Lambda Functions
+## API routes
 
-### TransactionHandler
-- `POST /transactions` - Create new transaction
-- `GET /transactions/{id}` - Read transaction
-- `PUT /transactions/{id}` - Update transaction
-- `DELETE /transactions/{id}` - Delete transaction
-- `GET /transactions` - List all transactions
-
-### ProductsHandler
-- `GET /products` - List all products
-- `PUT /products` - Update product list
-
-### DiscountsHandler
-- `GET /discounts` - List all discounts
-- `PUT /discounts` - Update discount list
-
-### PaymentMethodsHandler
-- `GET /payment-methods` - List payment methods
-- `PUT /payment-methods` - Update payment methods
-
-### AdminAuthHandler
-- `POST /admin/login` - Admin authentication
-- `POST /admin/password` - Update password
-- `POST /admin/reset-request` - Request password reset
-- `POST /admin/reset-verify` - Verify reset token
-
-### FeatureTogglesHandler
-- `GET /feature-toggles` - Get feature toggles
-- `PUT /feature-toggles` - Update feature toggles
-
-### PlantPassAccessHandler
-- `GET /plantpass-access` - Get access passphrase
-- `PUT /plantpass-access` - Update passphrase
-- `POST /plantpass-access/verify` - Verify passphrase
-
-### LockHandler
-- `POST /locks/{resource}` - Acquire lock
-- `DELETE /locks/{resource}` - Release lock
-- `GET /locks/{resource}` - Check lock status
-
-### WebSocketHandler
-- `$connect` - WebSocket connection
-- `$disconnect` - WebSocket disconnection
-- `$default` - Default message handler
-
-### EmailHandler
-- Sends password reset emails via SES
+`terraform/apigateway.tf` is the source of truth for routes, and
+`docs/ARCHITECTURE.md` has the table of routes, which Lambda serves each, and
+who may call it.
 
 ## Infrastructure
 
-### Deploy Infrastructure
+### Terraform variables
 
-```bash
-cd terraform
-terraform init
-terraform plan
-terraform apply
-```
-
-### Required Terraform Variables
-
-Create a `terraform.tfvars` file:
-
-```hcl
-reset_token_hash = "your-reset-token-hash"
-sender_email = "noreply@yourdomain.com"
-uiuc_hort_club_email = "admin@yourdomain.com"
-```
+Declared in `terraform/variables.tf`; the non-secret values are in
+`terraform/terraform.tfvars`. The Lambda zip paths are passed by the deploy
+workflow. Do not apply from a laptop: merging to `main` deploys.
 
 ### AWS Resources Created
 
@@ -179,23 +113,12 @@ See `.github/workflows/deploy-backend.yaml` for details.
 
 ## Environment Variables
 
-Lambda functions use environment variables for configuration:
-
-- `TRANSACTIONS_TABLE` - DynamoDB transactions table
-- `PRODUCTS_TABLE` - DynamoDB products table
-- `DISCOUNTS_TABLE` - DynamoDB discounts table
-- `PAYMENT_METHODS_TABLE` - DynamoDB payment methods table
-- `ADMIN_PASSWORD_TABLE` - DynamoDB admin passwords table
-- `FEATURE_TOGGLES_TABLE` - DynamoDB feature toggles table
-- `PLANTPASS_ACCESS_TABLE` - DynamoDB access control table
-- `LOCKS_TABLE` - DynamoDB locks table
-- `WEBSOCKET_TABLE` - DynamoDB WebSocket connections table
-- `SENDER_EMAIL` - SES sender email address
-- `RESET_TOKEN_HASH` - Password reset token hash
+Each Lambda's environment is set in `terraform/lambda.tf`. Read it there; the
+names differ between handlers.
 
 ## Frontend Repository
 
-This backend serves the PlantPass frontend application. See the [plantpass-frontend](https://github.com/your-org/plantpass-frontend) repository for the React application.
+This backend serves the PlantPass frontend application. See the [plantpass-frontend](https://github.com/UIUC-Hort-Club/plantpass-frontend) repository for the React application.
 
 ## Security
 

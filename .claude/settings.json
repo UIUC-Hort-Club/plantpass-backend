@@ -1,0 +1,60 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(make check)",
+      "Bash(make test)",
+      "Bash(make setup)",
+      "Bash(make graph)",
+      "Bash(make -C plantpass-backend check)",
+      "Bash(make -C plantpass-backend test)",
+      "Bash(npm test)",
+      "Bash(npm run check)",
+      "Bash(npm run lint)",
+      "Bash(npm run build)",
+      "Bash(npm --prefix plantpass-frontend run check)",
+      "Bash(npm --prefix ../plantpass-frontend run check)",
+      "Bash(npx vitest run *)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(terraform fmt *)",
+      "Bash(terraform validate *)",
+      "Bash(terraform -chdir=terraform fmt *)",
+      "Bash(terraform -chdir=terraform validate)",
+      "Bash(graphify query *)",
+      "Bash(graphify explain *)",
+      "Bash(graphify path *)",
+      "Bash(graphify affected *)",
+      "Bash(graphify update *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh pr checks *)",
+      "Bash(gh pr diff *)",
+      "Bash(gh run list *)",
+      "Bash(gh run view *)",
+      "Bash(gh run watch *)"
+    ],
+    "ask": [
+      "Bash(gh pr merge *)",
+      "Bash(gh workflow run *)",
+      "Bash(git push *)",
+      "Bash(npm run dev *)",
+      "Bash(npm run preview *)"
+    ],
+    "deny": [
+      "Bash(terraform apply *)",
+      "Bash(terraform destroy *)",
+      "Bash(terraform import *)",
+      "Bash(terraform state *)",
+      "Bash(terraform -chdir=terraform apply *)",
+      "Bash(terraform -chdir=terraform destroy *)",
+      "Bash(aws dynamodb delete-table *)",
+      "Bash(aws dynamodb delete-item *)",
+      "Bash(aws dynamodb batch-write-item *)",
+      "Bash(aws s3 rm *)",
+      "Bash(aws s3 rb *)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Read(**/.env)",
+      "Read(**/.env.*)"
+    ]
+  }
+}
