@@ -133,16 +133,17 @@ and the deploy fails after merge.
 
 **A field on the order:** `transaction.py` (`_initialize_from_json`,
 `_initialize_from_db` with a default for old records, `to_dict`); validation in
-`layers/python/shared_utils/validation.py`; `csv_export.py` if it belongs in
+`layers/python/shared_utils/validation.py` (see trap 9 first); `csv_export.py` if it belongs in
 the export; `src/types/index.ts`; `tests/types/contract-validation.test.ts`.
 
 ## Traps
 
 1. **Shared helpers are copied, not imported.** `auth_middleware.py` exists in
    nine places (seven of the ten handlers, `lambda/shared/`, the layer) and
-   `decimal_utils.py` in six (four handlers, `lambda/shared/`, the layer). Handlers import their local copy. A fix made in
-   one copy silently does nothing in the others. `tests/test_shared_copies.py`
-   fails if the copies drift. `response_utils.py` and `dynamodb_client.py` have
+   `decimal_utils.py` in six (four handlers, `lambda/shared/`, the layer).
+   Handlers import their local copy. A fix made in one copy silently does
+   nothing in the others. `tests/test_shared_copies.py` fails if the copies
+   drift. `response_utils.py` and `dynamodb_client.py` have
    real per-handler differences; read before you "fix" them.
 2. **`lambda/shared/` is only used by the tests.** Nothing deployed reads it.
 3. **Every handler's entry file is called `lambda_handler.py`** and uses flat
@@ -165,3 +166,10 @@ the export; `src/types/index.ts`; `tests/types/contract-validation.test.ts`.
 8. **Product and discount names are identifiers.** Orders match discounts by
    name and items by SKU. Renaming mid-sale orphans the old name on unpaid
    orders.
+9. **Changes to a layer do not deploy.** CI rebuilds both layer zips on every
+   deploy, but the two `aws_lambda_layer_version` resources in
+   `terraform/lambda.tf` have no `source_code_hash`, so Terraform never sees a
+   new zip. Production still runs layer version 1 from the first deploy. An
+   edit to `layers/python/shared_utils/validation.py` merges, deploys green,
+   and changes nothing. Roadmap R15 fixes this; until it ships, do not put a
+   change in the layer.

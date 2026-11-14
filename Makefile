@@ -11,28 +11,33 @@ help:
 	@echo "make workspace  link the agent kit into the parent folder (one-time, per machine)"
 	@echo "make graph      refresh the graphify code graphs for both repos"
 
-$(VENV): lambda/requirements-test.txt
+# The stamp file is written last, so a venv that failed half-way is rebuilt.
+$(VENV)/.ok: lambda/requirements-test.txt
 	python3 -m venv $(VENV)
-	$(PY) -m pip install -q -r lambda/requirements-test.txt || { rm -rf $(VENV); exit 1; }
-	@touch $(VENV)
+	$(PY) -m pip install -q -r lambda/requirements-test.txt
+	@touch $@
 
-setup: $(VENV)
+setup: $(VENV)/.ok
 
-test: $(VENV)
+test: $(VENV)/.ok
 	cd lambda && ../$(PY) -m pytest -q
 
 # Terraform steps are skipped when terraform is not installed; CI does not run them either.
+# They use their own data folder, so they never touch a real backend set up in
+# terraform/.terraform and need no AWS credentials.
+TF := TF_DATA_DIR=.terraform/check terraform -chdir=terraform
+
 check: test
 	@if command -v terraform >/dev/null; then \
-		terraform -chdir=terraform fmt -check -recursive && \
-		{ test -d terraform/.terraform || terraform -chdir=terraform init -backend=false -input=false >/dev/null; } && \
-		terraform -chdir=terraform validate; \
+		$(TF) fmt -check -recursive && \
+		$(TF) init -backend=false -input=false >/dev/null && \
+		$(TF) validate; \
 	else echo "terraform not installed: skipped fmt and validate"; fi
 
 # The parent folder holds both repos and is where agents are started. It is not
 # a repository, so its files are generated here instead of committed. Refuses
 # to touch anything it did not create.
-REPO := $(notdir $(CURDIR))
+REPO := $(shell basename "$(CURDIR)")
 
 workspace:
 	@test -d ../plantpass-frontend || { echo "Stop: ../plantpass-frontend not found. Run this with both repos side by side in their own folder."; exit 1; }
@@ -45,7 +50,7 @@ workspace:
 	mkdir -p ../.claude
 	ln -sfn ../$(REPO)/.agents/skills ../.claude/skills
 	ln -sfn ../$(REPO)/.claude/settings.json ../.claude/settings.json
-	sed 's|plantpass-backend/|$(REPO)/|g' docs/workspace-CLAUDE.md > ../CLAUDE.md
+	sed 's|plantpass-backend|$(REPO)|g' docs/workspace-CLAUDE.md > ../CLAUDE.md
 	@echo "Linked. Start agents from $$(cd .. && pwd)"
 
 graph:

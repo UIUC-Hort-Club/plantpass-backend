@@ -16,6 +16,11 @@ Decision D9 and question Q7.
   will be created, changed or destroyed before it happens.
 - **Nothing checks the result.** After a deploy the workflow prints three
   values and exits. A broken login would be found by a volunteer.
+- **Every deploy touches every Lambda.** The zips are rebuilt each time, so
+  Terraform updates all ten functions even when no code changed (the docs-only
+  deploy of PR #9 changed ten). One request made seconds after that deploy
+  returned 500 and then succeeded on retry. The cause was not confirmed, but a
+  deploy during an event should not be able to do that.
 - **There is no written way back,** and `main` can be pushed to directly.
 - In 2026, fixes were merged the day before and the day of the sale.
 
@@ -47,10 +52,10 @@ not real" bar on every screen, so nobody rings up a real customer there.
    load in new code and new fields are additive.
 7. **`main` is protected:** changes arrive by pull request with CI passing.
 8. **Pinned build inputs.** The auth layer is built with an unpinned `pip
-   install bcrypt PyJWT` on every deploy, so the library that signs login
-   tokens changes version whenever a release comes out (it moved from 2.12 to
-   2.15 between the April and November 2026 deploys). Pin both, and pin the
-   Terraform providers by committing the lock file.
+   install bcrypt PyJWT`, and the Terraform provider versions are not locked.
+   Pin both packages, and commit the provider lock file. (Today the unpinned
+   layer build has no effect, because layers never redeploy; roadmap R15 fixes
+   that and must pin the versions in the same change.)
 
 ## Left out on purpose
 
