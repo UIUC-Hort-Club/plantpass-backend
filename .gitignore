@@ -53,3 +53,9 @@ yarn-error.log*
 # Temporary files
 *.tmp
 .cache/
+
+# Agent tooling
+coverage.xml
+graphify-out/
+.claude/settings.local.json
+.claude/worktrees/
