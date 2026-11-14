@@ -53,9 +53,18 @@ repos agree.
 One line per step with the real counts (for example "pytest: 83 passed"), then:
 
 - **Failed:** the failing test or error, quoted, with file and line.
-- **Not checked:** always list these, because no local check covers them: the
-  UI against a real API, Lambdas against real DynamoDB, the WebSocket, email
-  sending, and the deploy itself. Add anything you skipped and why.
+- **Not checked:** always list these, because no automated check covers them:
+  the UI in a browser, Lambdas against real DynamoDB and API Gateway, the
+  WebSocket, email sending, and the deploy itself. Add anything you skipped
+  and why.
+
+## Seeing a change in the app
+
+The checks above do not open the app. For anything a volunteer or organizer
+would see, also run it: `make -C plantpass-backend dev` in one terminal and
+`npm --prefix plantpass-frontend run dev` in another, then use the screen you
+changed (staff passphrase `dev`; admin login needs no password). Fake data,
+nothing saved, production untouched. Say in the report whether you did this.
 
 A failure that was already failing on `origin/main` is still a failure. Say it
 was pre-existing and show how you know.

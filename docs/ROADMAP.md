@@ -34,9 +34,10 @@ These each fix something that cost the club real accuracy or risk in 2026.
 | R2 | Voucher cannot exceed the order | Report §3: $28 voucher on a $26 order | Backend clamps the applied voucher to the subtotal after other discounts. One line plus a test. | proposed |
 | R3 | Trim names on save | Report §4: "4-inch Round " in every row | Backend strips whitespace from product, discount and payment-method names when the list is saved. One-time fix of the stored row happens by re-saving the list. | proposed |
 | R4 | Record when an order was paid | Report "created vs. completed": all time charts use creation time; backlog delay cannot be measured | Add `paid_at` when payment is marked paid; add the column to the export. No UI. | proposed |
-| R5 | A safe place to try changes | Local dev writes to production; an analytics timeout was found and patched on sale day | A small local server that runs the handlers against a fake DynamoDB, and a dev config that points the frontend at it instead of production. Decided: D6. | approved |
+| R5 | A safe place to try changes | Local dev writes to production; an analytics timeout was found and patched on sale day | A small local server that runs the handlers against a fake DynamoDB, and a dev config that points the frontend at it instead of production. Decided: D6. Spec: `specs/R5-local-test-server.md`. | building |
 | R6 | Rehearse the sale | Same sale-day timeout; nothing today exercises 700 orders | Script that replays last year's export through whatever R5 provides, then loads analytics and export. Run it before every sale. Depends on R5. | proposed |
 | R7 | Confirm staff access works with the passphrase off | `ARCHITECTURE.md` trap 6 | Reproduce in R5's environment. Either fix it or remove the toggle. | proposed |
+| R15 | Layer changes actually deploy | Found in review, 2026-11-14: the deploy of PR #10 rebuilt both layers and Terraform changed neither (`ARCHITECTURE.md` trap 9). Order validation lives in a layer, so R2, R3 and R13 would merge green and do nothing. | Add `source_code_hash` to the two layer resources and pin `bcrypt` and `PyJWT` in the workflow, in one change, because the first deploy after it replaces the token library production has run since day one. Have a person log in afterwards. | proposed |
 
 ## Since the 2026-11-14 decisions
 

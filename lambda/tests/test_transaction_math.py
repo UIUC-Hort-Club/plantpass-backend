@@ -144,6 +144,20 @@ def test_the_stored_record_has_exactly_these_fields():
     assert stored["customer_email"] == "customer@example.com"
     assert stored["club_voucher"] == 1
 
+    # every update loads the record and writes it all back, so a field lost on
+    # load is lost for good
+    loaded = Transaction.from_db_record(stored)
+    assert loaded.customer_email == "customer@example.com"
+    assert loaded.club_voucher == 1
+
+
+def test_marking_unpaid_again_clears_the_paid_status():
+    t = order()
+    t.update_payment({"method": "Cash", "paid": True})
+    t.update_payment({"paid": False})
+    assert t.payment_status == "unpaid"
+    assert t.payment["paid"] is False
+
 
 def test_a_paid_order_is_still_paid_after_loading_from_the_database():
     t = order()

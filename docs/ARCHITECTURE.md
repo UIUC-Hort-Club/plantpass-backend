@@ -98,13 +98,27 @@ Feature toggles (`FeatureTogglesHandler`): `collectEmailAddresses`,
 
 ## Environments
 
-There is one: production. No staging, no local backend.
+Two: production, and a local copy for development. There is no hosted test
+copy yet (roadmap R14).
 
-- `plantpass-frontend/public/config.js` points the local dev server at the
-  **production API**. `npm run dev` plus "Enter Order" writes a real order into
-  the real sale data.
-- Unit tests in both repos mock the network and the database. Nothing local
-  exercises a Lambda against DynamoDB or the UI against a real API.
+**Local.** `make dev` in the backend starts `scripts/dev_server.py` on
+`localhost:8787`. It takes the route list from `terraform/apigateway.tf` and
+passes each request to the same `lambda_handler` production runs, with
+in-memory fakes for DynamoDB and S3. `npm run dev` in the frontend talks to it,
+because the committed `public/config.js` points there. Sample products are
+loaded on start, nothing is saved between runs, the staff passphrase is `dev`
+and admin login needs no password.
+
+What local does not have: the WebSocket API and email (both skipped), and
+anything API Gateway, IAM or real DynamoDB does differently from the fakes. A
+change that depends on those is not proven until it runs in AWS.
+
+`lambda/tests/test_dev_server.py` drives one order from entry to paid through
+that server. It is the only test that runs the handlers against a database;
+the other backend tests, and all frontend tests, use mocks.
+
+**Production.** The deploy workflow overwrites `config.js` with the production
+URLs. To read them, fetch `https://hortclubplantpass.org/config.js`.
 
 ## Deploy
 
@@ -129,20 +143,23 @@ file in `plantpass-frontend/src/api/`; the type in `src/types/index.ts`.
 **A new Lambda** also needs: function, log group and permission in
 `terraform/lambda.tf`; a zip-path variable in `terraform/variables.tf`; a zip
 line **and** a `-var` line in `deploy-backend.yaml`. Miss the workflow lines
-and the deploy fails after merge.
+and the deploy fails after merge. For the local copy, add its folder to
+`HANDLERS` in `scripts/dev_server.py`, and any new table to `TABLES` there;
+the server refuses to start until both match the Terraform.
 
 **A field on the order:** `transaction.py` (`_initialize_from_json`,
 `_initialize_from_db` with a default for old records, `to_dict`); validation in
-`layers/python/shared_utils/validation.py`; `csv_export.py` if it belongs in
+`layers/python/shared_utils/validation.py` (see trap 9 first); `csv_export.py` if it belongs in
 the export; `src/types/index.ts`; `tests/types/contract-validation.test.ts`.
 
 ## Traps
 
 1. **Shared helpers are copied, not imported.** `auth_middleware.py` exists in
    nine places (seven of the ten handlers, `lambda/shared/`, the layer) and
-   `decimal_utils.py` in six (four handlers, `lambda/shared/`, the layer). Handlers import their local copy. A fix made in
-   one copy silently does nothing in the others. `tests/test_shared_copies.py`
-   fails if the copies drift. `response_utils.py` and `dynamodb_client.py` have
+   `decimal_utils.py` in six (four handlers, `lambda/shared/`, the layer).
+   Handlers import their local copy. A fix made in one copy silently does
+   nothing in the others. `tests/test_shared_copies.py` fails if the copies
+   drift. `response_utils.py` and `dynamodb_client.py` have
    real per-handler differences; read before you "fix" them.
 2. **`lambda/shared/` is only used by the tests.** Nothing deployed reads it.
 3. **Every handler's entry file is called `lambda_handler.py`** and uses flat
@@ -165,3 +182,10 @@ the export; `src/types/index.ts`; `tests/types/contract-validation.test.ts`.
 8. **Product and discount names are identifiers.** Orders match discounts by
    name and items by SKU. Renaming mid-sale orphans the old name on unpaid
    orders.
+9. **Changes to a layer do not deploy.** CI rebuilds both layer zips on every
+   deploy, but the two `aws_lambda_layer_version` resources in
+   `terraform/lambda.tf` have no `source_code_hash`, so Terraform never sees a
+   new zip. Production still runs layer version 1 from the first deploy. An
+   edit to `layers/python/shared_utils/validation.py` merges, deploys green,
+   and changes nothing. Roadmap R15 fixes this; until it ships, do not put a
+   change in the layer.

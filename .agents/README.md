@@ -27,3 +27,15 @@ left out because they only describe those plugin features.
 To update: copy the four `SKILL.md` files from upstream again, read the diff,
 and change the commit above. Do not edit them in place; put PlantPass-specific
 rules in `AGENTS.md` or in our own skills.
+
+## Vendored: grilling
+
+`grilling` and `grill-me` are copied unmodified from
+<https://github.com/mattpocock/skills> (MIT, see `skills/grilling/LICENSE`),
+commit `5863806`, copied 2026-11-14. `grilling` interviews the architect about
+open decisions in dependency order, each with a recommended answer; `grill-me`
+is the typed command that starts it. Use it when a spec's "Questions for the
+architect" need settling.
+
+Upstream asks a whole round of questions at once. The architect prefers them
+one at a time; ask that way unless told otherwise.
