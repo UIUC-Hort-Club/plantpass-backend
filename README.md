@@ -72,7 +72,7 @@ declined is in `docs/ROADMAP.md`.
 
 ### Local Testing
 
-The test suite mocks AWS. There is no local or staging environment yet: nothing short of production runs a Lambda against DynamoDB. See `docs/ROADMAP.md`, item R5.
+`make dev` runs the API on `http://localhost:8787`: the real Lambda handlers against in-memory fakes of DynamoDB and S3, with sample data that is discarded on exit. The frontend's dev server talks to it by default. `lambda/tests/test_dev_server.py` takes an order from entry to paid through it. There is no hosted test copy yet (`docs/ROADMAP.md`, item R14).
 
 ## API routes
 

@@ -98,13 +98,27 @@ Feature toggles (`FeatureTogglesHandler`): `collectEmailAddresses`,
 
 ## Environments
 
-There is one: production. No staging, no local backend.
+Two: production, and a local copy for development. There is no hosted test
+copy yet (roadmap R14).
 
-- `plantpass-frontend/public/config.js` points the local dev server at the
-  **production API**. `npm run dev` plus "Enter Order" writes a real order into
-  the real sale data.
-- Unit tests in both repos mock the network and the database. Nothing local
-  exercises a Lambda against DynamoDB or the UI against a real API.
+**Local.** `make dev` in the backend starts `scripts/dev_server.py` on
+`localhost:8787`. It takes the route list from `terraform/apigateway.tf` and
+passes each request to the same `lambda_handler` production runs, with
+in-memory fakes for DynamoDB and S3. `npm run dev` in the frontend talks to it,
+because the committed `public/config.js` points there. Sample products are
+loaded on start, nothing is saved between runs, the staff passphrase is `dev`
+and admin login needs no password.
+
+What local does not have: the WebSocket API and email (both skipped), and
+anything API Gateway, IAM or real DynamoDB does differently from the fakes. A
+change that depends on those is not proven until it runs in AWS.
+
+`lambda/tests/test_dev_server.py` drives one order from entry to paid through
+that server. It is the only test that runs the handlers against a database;
+the other backend tests, and all frontend tests, use mocks.
+
+**Production.** The deploy workflow overwrites `config.js` with the production
+URLs. To read them, fetch `https://hortclubplantpass.org/config.js`.
 
 ## Deploy
 

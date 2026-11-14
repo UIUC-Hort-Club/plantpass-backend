@@ -2,11 +2,12 @@
 VENV := .venv
 PY   := $(VENV)/bin/python
 
-.PHONY: help setup test check workspace graph
+.PHONY: help setup test check dev workspace graph
 
 help:
 	@echo "make setup      create .venv and install test dependencies"
 	@echo "make test       run pytest"
+	@echo "make dev        run the API locally on http://localhost:8787 (fake data, nothing saved)"
 	@echo "make check      everything CI runs, plus terraform fmt and validate"
 	@echo "make workspace  link the agent kit into the parent folder (one-time, per machine)"
 	@echo "make graph      refresh the graphify code graphs for both repos"
@@ -21,6 +22,11 @@ setup: $(VENV)/.ok
 
 test: $(VENV)/.ok
 	cd lambda && ../$(PY) -m pytest -q
+
+# The real handlers on a fake AWS. With this running, `npm run dev` in
+# plantpass-frontend is a complete local copy of the app.
+dev: $(VENV)/.ok
+	$(PY) scripts/dev_server.py
 
 # Terraform steps are skipped when terraform is not installed; CI does not run them either.
 # They use their own data folder, so they never touch a real backend set up in

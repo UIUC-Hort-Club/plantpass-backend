@@ -52,7 +52,7 @@ does it. Follow the `ponytail` skill (level `full`) for every line.
   identically. `tests/test_shared_copies.py` will tell you if you missed one.
 - A new Lambda or zip needs lines in `deploy-backend.yaml`. A new environment
   variable needs `terraform/lambda.tf`.
-- Never run the frontend dev server and submit a form; it writes to
+- Try the change in the local copy (`make dev` plus `npm run dev`), never in
   production. Never call a non-GET production endpoint.
 - Never run `terraform apply`, `plan` with real state, or any AWS write.
 - Do not add a dependency for something a few lines or MUI already do. If you
@@ -67,6 +67,6 @@ does it. Follow the `ponytail` skill (level `full`) for every line.
 2. Run `ponytail-review` on the diff in each repo and fix every "Must fix".
 3. Commit on the feature branch in small, plainly worded commits. Do not push.
 4. Report: what was built, the files touched in each repo, test results as
-   run, anything in the spec you could not do, what was not verified (there is
-   no end-to-end environment unless roadmap R5 has shipped), and that `/ship
+   run, anything in the spec you could not do, what was not verified (the local
+   copy has no WebSocket, email, or real AWS behaviour), and that `/ship
    <ID>` is next.

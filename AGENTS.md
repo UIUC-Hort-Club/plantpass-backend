@@ -49,6 +49,7 @@ graph`. The graph shows committed structure; read the real file before editing.
 ```bash
 make check                 # pytest + terraform fmt + terraform validate (creates .venv on first run)
 make test                  # pytest only
+make dev                   # the API on localhost:8787: real handlers, fake AWS, sample data
 cd lambda && ../.venv/bin/python -m pytest tests/test_transaction_math.py -q   # one file
 ```
 
@@ -56,9 +57,9 @@ Frontend: `npm --prefix ../plantpass-frontend run check`.
 
 ## Hard rules
 
-- **Production is the only environment.** Never send a non-GET request to the
-  production API. Never run the frontend dev server and submit a form: it is
-  wired to production.
+- **Try things locally, never in production.** `make dev` here plus `npm run
+  dev` in the frontend is a complete local copy on fake data. Never send a
+  non-GET request to the production API, and never point a dev server at it.
 - **Never run `terraform apply`, `destroy`, `import`, or `state` commands, or
   any AWS CLI write.** Deploys happen only through GitHub Actions on merge to
   `main`.
