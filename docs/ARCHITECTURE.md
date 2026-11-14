@@ -19,7 +19,7 @@ plantpass/                     workspace folder (not a repo)
 └── plantpass-frontend/        React 19 + TypeScript + Vite + MUI
     ├── src/components/core/   OrderEntry, OrderLookup: the sale-day screens
     ├── src/components/AdminConsole/
-    ├── src/api/               one small file per API call, all through apiClient.ts
+    ├── src/api/               one small file per API call, through apiClient.ts (three older files call fetch directly)
     ├── src/types/index.ts     API shapes, mirrored by hand from the backend
     └── tests/                 vitest + Testing Library
 ```
@@ -47,13 +47,14 @@ out of date.
 | `GET /transactions/export-data` | TransactionHandler | admin |
 | `DELETE /transactions/clear-all` | TransactionHandler | admin. **Deletes every order.** |
 | `GET /products`, `/discounts`, `/payment-methods`, `/feature-toggles` | one handler each | **public** |
-| `PUT` on those four | same | token; `PUT /products` is admin-only, check the others in their handler |
-| `GET/PUT /lock/{resourceType}` | LockHandler | token |
+| `PUT` on those four | same | admin |
+| `GET/PUT /lock/{resourceType}` | LockHandler | admin |
 | `GET/PUT /plantpass-access` | PlantPassAccessHandler | admin |
 | `POST /plantpass-access/verify` | PlantPassAccessHandler | **public**; returns a 24h staff token |
 | `POST /admin/login`, `/admin/forgot-password` | AdminAuthHandler | **public**; login returns a 24h admin token |
 | `POST /admin/change-password`, `/admin/reset-password` | AdminAuthHandler | see handler |
-| `POST /email/receipt`, `/email/password-reset` | EmailHandler | meant for Lambda-to-Lambda calls (TransactionHandler and AdminAuthHandler invoke it directly) |
+| none | EmailHandler | no API route, on purpose: it does no authentication. TransactionHandler and AdminAuthHandler invoke it directly. |
+| `POST /products`, `PUT`/`DELETE /products/{SKU}`, and the same three for `/discounts` | ProductsHandler, DiscountsHandler | routed in Terraform but not implemented: the handlers answer 404. The frontend saves whole lists with `PUT`. |
 
 Which routes are public is decided by `is_public_endpoint()` in
 `auth_middleware.py`. Tokens are HS256 JWTs carrying `role: staff | admin`.
@@ -138,8 +139,8 @@ the export; `src/types/index.ts`; `tests/types/contract-validation.test.ts`.
 ## Traps
 
 1. **Shared helpers are copied, not imported.** `auth_middleware.py` exists in
-   nine places (seven handlers, `lambda/shared/`, the layer) and
-   `decimal_utils.py` in six. Handlers import their local copy. A fix made in
+   nine places (seven of the ten handlers, `lambda/shared/`, the layer) and
+   `decimal_utils.py` in six (four handlers, `lambda/shared/`, the layer). Handlers import their local copy. A fix made in
    one copy silently does nothing in the others. `tests/test_shared_copies.py`
    fails if the copies drift. `response_utils.py` and `dynamodb_client.py` have
    real per-handler differences; read before you "fix" them.

@@ -30,7 +30,7 @@ architect has both.
    report says cancelled orders "could not be deleted"; the code does have a
    Delete Order button on the cashier screen, so why it was not used on the day
    is an open question (hard to find? failed? not known to volunteers?).
-3. **A voucher larger than the order.** Order AFG-ZRW: $26 subtotal, $28
+3. **A voucher larger than the order.** One order had a $26 subtotal and a $28
    voucher. Total correctly showed $0, but the export records $28 of discount
    on a $26 order.
 4. **A trailing space in a product name.** "4-inch Round " (SKU 4INRND) in

@@ -82,15 +82,6 @@ who may call it.
 
 ## Infrastructure
 
-### Deploy Infrastructure
-
-```bash
-cd terraform
-terraform init
-terraform plan
-terraform apply
-```
-
 ### Terraform variables
 
 Declared in `terraform/variables.tf`; the non-secret values are in

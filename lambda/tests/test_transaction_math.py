@@ -79,7 +79,7 @@ def test_total_never_goes_below_zero():
 
 
 def test_voucher_larger_than_order_is_recorded_in_full():
-    # Today's behaviour, seen at the 2026 sale (order AFG-ZRW). Roadmap R2
+    # Today's behaviour, seen once at the 2026 sale. Roadmap R2
     # changes it to cap the voucher at the subtotal; update this test then.
     t = order(voucher=28)
     assert t.club_voucher == 28
@@ -111,6 +111,50 @@ def test_deselecting_a_discount_on_update_removes_it_from_the_total():
     t = order(discounts=[{**TEN_PERCENT, "selected": True}])
     t.update_discounts([{"name": "10% Off", "selected": False}])
     assert t.receipt["total"] == pytest.approx(26.0)
+
+
+def test_changing_the_voucher_recalculates_the_total():
+    t = order()
+    t.update_voucher(6)
+    assert t.club_voucher == 6
+    assert t.receipt["total"] == pytest.approx(20.0)
+
+
+def test_the_stored_record_has_exactly_these_fields():
+    t = Transaction.from_json(
+        {
+            "items": [{"SKU": "3PACK", "item": "3-Pack", "quantity": 1, "price_ea": 6.0}],
+            "voucher": 1,
+            "email": "customer@example.com",
+        }
+    )
+    stored = t.to_dict()
+    assert set(stored) == {
+        "purchase_id",
+        "timestamp",
+        "items",
+        "discounts",
+        "club_voucher",
+        "customer_email",
+        "payment",
+        "payment_status",
+        "receipt",
+    }
+    # the request says "email" and "voucher"; the record says otherwise
+    assert stored["customer_email"] == "customer@example.com"
+    assert stored["club_voucher"] == 1
+
+
+def test_a_paid_order_is_still_paid_after_loading_from_the_database():
+    t = order()
+    t.update_payment({"method": "Zelle", "paid": True})
+    stored = t.to_dict()
+    del stored["payment_status"]  # rebuilt from payment.paid on load
+
+    loaded = Transaction.from_db_record(stored)
+    assert loaded.payment_status == "paid"
+    assert loaded.payment == {"method": "Zelle", "paid": True}
+    assert loaded.to_dict() == t.to_dict()
 
 
 def test_round_trip_through_the_database_shape():

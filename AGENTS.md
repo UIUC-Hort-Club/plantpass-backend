@@ -79,8 +79,8 @@ Frontend: `npm --prefix ../plantpass-frontend run check`.
   `lambda_handler.lambda_handler`, routed on `event["routeKey"]`.
 - Runtime is Python 3.11. No new runtime dependencies without the architect;
   the only packaged ones are `bcrypt` and `PyJWT` (auth layer).
-- `auth_middleware.py` and `decimal_utils.py` are copied into each handler.
-  Edit every copy identically; `tests/test_shared_copies.py` enforces it.
+- `auth_middleware.py` and `decimal_utils.py` are copied into the handlers that
+  use them. Edit every copy identically; `tests/test_shared_copies.py` enforces it.
 - Order money and state rules live in `lambda/TransactionHandler/transaction.py`
   and are pinned by `tests/test_transaction_math.py`. Change a rule and its
   test together.

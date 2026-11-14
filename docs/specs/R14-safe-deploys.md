@@ -46,6 +46,11 @@ not real" bar on every screen, so nobody rings up a real customer there.
    `ARCHITECTURE.md`. Works because of the standing rule that old orders must
    load in new code and new fields are additive.
 7. **`main` is protected:** changes arrive by pull request with CI passing.
+8. **Pinned build inputs.** The auth layer is built with an unpinned `pip
+   install bcrypt PyJWT` on every deploy, so the library that signs login
+   tokens changes version whenever a release comes out (it moved from 2.12 to
+   2.15 between the April and November 2026 deploys). Pin both, and pin the
+   Terraform providers by committing the lock file.
 
 ## Left out on purpose
 
