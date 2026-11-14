@@ -48,3 +48,51 @@ jobs:
       - name: Check test results
         run: |
           echo "✅ All tests passed!"
+
+  # What merging this pull request would change in production. Read-only: it
+  # plans, it never applies. Skipped for forks, which do not get the secrets.
+  plan:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Package Lambda functions
+        run: python scripts/package.py
+
+      # The layer resources have no source_code_hash, so their contents do not
+      # affect a plan (roadmap R15). Empty stand-ins save a Docker build here.
+      - name: Stand-in layer zips
+        run: python -c "import zipfile; [zipfile.ZipFile('terraform/' + n, 'w').close() for n in ('auth_layer.zip', 'shared_utils_layer.zip')]"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.2
+          terraform_wrapper: false
+
+      - name: Terraform plan
+        working-directory: ./terraform
+        run: |
+          set -o pipefail
+          terraform init -input=false
+          terraform plan -input=false -no-color -lock=false | tee plan.txt
+          {
+            echo "### Terraform plan against production"
+            echo '```'
+            grep -E '^ +# .+ (will be|must be) |^Plan:|^No changes' plan.txt || echo "(no summary lines found; read the job log)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

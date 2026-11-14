@@ -43,8 +43,10 @@ not real" bar on every screen, so nobody rings up a real customer there.
 3. **Production is a separate release step:** one workflow, run on a commit
    that is already green on the test copy. An agent may run it under D10; in a
    freeze window only the architect.
-4. **Plan before apply.** A pull request that touches `terraform/` shows the
-   plan for both copies in the PR. The release step refuses a plan that
+4. **Plan before apply.** Every pull request shows its plan (first piece,
+   built 2026-11-14: a `plan` job against production, and reproducible Lambda
+   zips so an unchanged function plans as unchanged). When the test copy
+   exists, the job plans for both copies. The release step refuses a plan that
    destroys or replaces a table or bucket unless the release was started with
    an explicit override.
 5. **Smoke test inside the workflow** after every deploy: site loads, public
