@@ -17,6 +17,10 @@ for both repos. The frontend is `../plantpass-frontend`.
    all code. Use level `ultra` while planning, `full` while building.
 4. **Say what you did not check.** There is no staging environment. Be exact
    about what ran and what did not.
+5. **Ask the architect one question at a time.** When decisions are open, use
+   the `grilling` skill's method (dependency order, a recommended answer,
+   worded so "yes" accepts it) but put one question per message, not a whole
+   round. Look up facts yourself; only decisions go to the architect.
 
 ## The path a change takes
 

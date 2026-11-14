@@ -109,7 +109,9 @@ because the committed `public/config.js` points there. Sample products are
 loaded on start, nothing is saved between runs, the staff passphrase is `dev`
 and admin login needs no password.
 
-What local does not have: the WebSocket API and email (both skipped), and
+What local does not have: the WebSocket API and email (both skipped), the
+admin password flows (no password is stored, so turning on "Password Protect
+Admin Console" locally locks you out until you restart the server), and
 anything API Gateway, IAM or real DynamoDB does differently from the fakes. A
 change that depends on those is not proven until it runs in AWS.
 
@@ -145,7 +147,10 @@ file in `plantpass-frontend/src/api/`; the type in `src/types/index.ts`.
 line **and** a `-var` line in `deploy-backend.yaml`. Miss the workflow lines
 and the deploy fails after merge. For the local copy, add its folder to
 `HANDLERS` in `scripts/dev_server.py`, and any new table to `TABLES` there;
-the server refuses to start until both match the Terraform.
+the server refuses to start when a route's first path segment has no entry in
+`HANDLERS` or a table is missing from `TABLES`. It does not notice a new Lambda
+whose routes sit under an existing first segment; those requests go to the
+existing handler.
 
 **A field on the order:** `transaction.py` (`_initialize_from_json`,
 `_initialize_from_db` with a default for old records, `to_dict`); validation in

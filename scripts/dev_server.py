@@ -40,6 +40,7 @@ os.environ.update(
     AWS_SECRET_ACCESS_KEY="local-fake",
     AWS_DEFAULT_REGION="us-east-1",
     AWS_REGION="us-east-1",  # some handlers pick their region from this one
+    AWS_IGNORE_CONFIGURED_ENDPOINT_URLS="true",  # e.g. a LocalStack AWS_ENDPOINT_URL in the shell
     AWS_EC2_METADATA_DISABLED="true",
     JWT_SECRET="local-dev-server-secret-not-used-anywhere-real",
     PASSWORD_BUCKET="local-admin-password",
