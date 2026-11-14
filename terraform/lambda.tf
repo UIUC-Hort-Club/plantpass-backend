@@ -147,6 +147,13 @@ resource "aws_cloudwatch_log_group" "plantpass_access_handler_logs" {
   }
 }
 
+# Signs staff and admin login tokens. Generated once, kept in Terraform state,
+# never in source. Changing it logs every device out.
+resource "random_password" "jwt_secret" {
+  length  = 64
+  special = false
+}
+
 resource "aws_lambda_function" "transaction_handler" {
   function_name    = "TransactionHandler"
   filename         = var.transaction_lambda_zip_path
@@ -171,7 +178,7 @@ resource "aws_lambda_function" "transaction_handler" {
       CONNECTIONS_TABLE  = aws_dynamodb_table.websocket_connections.name
       WEBSOCKET_ENDPOINT = "https://${aws_apigatewayv2_api.websocket_api.id}.execute-api.${var.aws_region}.amazonaws.com/${aws_apigatewayv2_stage.websocket_stage.name}"
       EMAIL_LAMBDA_ARN   = aws_lambda_function.email_handler.arn
-      JWT_SECRET         = "super-secret-key"
+      JWT_SECRET         = random_password.jwt_secret.result
     }
   }
 
@@ -198,7 +205,7 @@ resource "aws_lambda_function" "admin" {
     variables = {
       PASSWORD_BUCKET            = aws_s3_bucket.admin_password.bucket
       PASSWORD_KEY               = "password.json"
-      JWT_SECRET                 = "super-secret-key"
+      JWT_SECRET                 = random_password.jwt_secret.result
       EMAIL_LAMBDA_ARN           = aws_lambda_function.email_handler.arn
       TEMP_PASSWORD_TABLE        = aws_dynamodb_table.temp_passwords.name
       FEATURE_TOGGLES_TABLE_NAME = aws_dynamodb_table.feature_toggles.name
@@ -233,7 +240,7 @@ resource "aws_lambda_function" "products_handler" {
   environment {
     variables = {
       PRODUCTS_TABLE = aws_dynamodb_table.products.name
-      JWT_SECRET     = "super-secret-key"
+      JWT_SECRET     = random_password.jwt_secret.result
     }
   }
 
@@ -261,7 +268,7 @@ resource "aws_lambda_function" "discounts_handler" {
   environment {
     variables = {
       DISCOUNTS_TABLE = aws_dynamodb_table.discounts.name
-      JWT_SECRET      = "super-secret-key"
+      JWT_SECRET      = random_password.jwt_secret.result
     }
   }
 
@@ -289,7 +296,7 @@ resource "aws_lambda_function" "payment_methods_handler" {
   environment {
     variables = {
       PAYMENT_METHODS_TABLE = aws_dynamodb_table.payment_methods.name
-      JWT_SECRET            = "super-secret-key"
+      JWT_SECRET            = random_password.jwt_secret.result
     }
   }
 
@@ -317,7 +324,7 @@ resource "aws_lambda_function" "lock_handler" {
   environment {
     variables = {
       LOCK_TABLE_NAME = aws_dynamodb_table.locks.name
-      JWT_SECRET      = "super-secret-key"
+      JWT_SECRET      = random_password.jwt_secret.result
     }
   }
 
@@ -345,7 +352,7 @@ resource "aws_lambda_function" "feature_toggles_handler" {
   environment {
     variables = {
       FEATURE_TOGGLES_TABLE_NAME = aws_dynamodb_table.feature_toggles.name
-      JWT_SECRET                 = "super-secret-key"
+      JWT_SECRET                 = random_password.jwt_secret.result
     }
   }
 
@@ -373,7 +380,7 @@ resource "aws_lambda_function" "plantpass_access_handler" {
   environment {
     variables = {
       PLANTPASS_ACCESS_TABLE_NAME = aws_dynamodb_table.plantpass_access.name
-      JWT_SECRET                  = "super-secret-key"
+      JWT_SECRET                  = random_password.jwt_secret.result
     }
   }
 
@@ -494,12 +501,4 @@ resource "aws_lambda_function" "email_handler" {
   tags = {
     application = "plantpass"
   }
-}
-
-resource "aws_lambda_permission" "apigw_email" {
-  statement_id  = "AllowAPIGatewayInvokeEmail"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.email_handler.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
 }
