@@ -5,7 +5,7 @@ through the filter in `PRODUCT.md`.
 
 **Status of this file:** first triaged by an agent on 2026-11-14 from the 2026
 sale report and a read of the code, then updated the same day with the
-architect's decisions (now D1–D25, in `DECISIONS.md`). Statuses: `proposed` → `approved` → `specced`
+architect's decisions (now D1–D26, in `DECISIONS.md`). Statuses: `proposed` → `approved` → `specced`
 (has a file in `specs/`) → `building` → `shipped`, or `declined`. Only the
 architect moves an item to `approved`.
 
@@ -21,7 +21,8 @@ architect moves an item to `approved`.
 | January | Cancel an order (R1), voucher cap, name trimming, paid-at (R2–R4), events and product import (R13), then R7, then R8–R11 as time allows (D24) |
 | November – December 2026 | Security (S1 shipped, S2), two sale-stoppers (A1, A2), local test server (R5, shipped), then test copy and safe deploys (R14), layer deploys (R15), shared-code cleanup (R12) |
 
-The dates were confirmed by the architect (D16). The build order is D25.
+The dates were confirmed by the architect (D16). The build order is D25, as
+changed by D26.
 
 ## Before the April 2027 sale
 
