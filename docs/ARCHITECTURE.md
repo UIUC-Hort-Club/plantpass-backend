@@ -59,6 +59,13 @@ out of date.
 Which routes are public is decided by `is_public_endpoint()` in
 `auth_middleware.py`. Tokens are HS256 JWTs carrying `role: staff | admin`.
 
+Three routes are slowed down at the API stage (`route_settings` in
+`terraform/apigateway.tf`): admin login, the passphrase check, and "forgot
+password". Over the limit they answer 429 and can be retried. Nothing locks
+anyone out, because at an event every volunteer shares one network address. A
+new admin password must be at least 12 characters, and "forgot password" can
+be asked once a minute.
+
 ## The order record
 
 Table `transactions`, key `purchase_id` (`ABC-DEF`, six random letters). Built

@@ -8,15 +8,14 @@ Local stand-in for the PlantPass API: the real Lambda handlers, a fake AWS.
 Requests are routed with the route keys in terraform/apigateway.tf and handed
 to the same lambda_handler functions production runs. DynamoDB and S3 are
 moto's in-memory fakes, so nothing is saved between runs and nothing can reach
-a real AWS account. Staff passphrase: "dev". Admin login needs no password.
+a real AWS account. Staff passphrase: "dev". Admin login needs no password;
+if you turn "password protect admin" on, the password is "dev-admin-password".
 
 Development and tests only. Nothing here is deployed: the deploy workflow zips
 lambda/<Handler>/*.py and nothing else.
 
-Not covered: the WebSocket API and email sending (both are skipped), the admin
-password flows (no password is stored, so turning on "password protect admin"
-locks you out until a restart), API Gateway's own behaviour (throttling,
-payload limits), and IAM.
+Not covered: the WebSocket API and email sending (both are skipped), API
+Gateway's own behaviour (throttling, payload limits), and IAM.
 """
 import argparse
 import importlib
@@ -169,7 +168,18 @@ def start_fake_aws():
             ]
         dynamodb.create_table(**spec)
 
-    boto3.client("s3").create_bucket(Bucket=os.environ["PASSWORD_BUCKET"])
+    import bcrypt
+
+    s3 = boto3.client("s3")
+    s3.create_bucket(Bucket=os.environ["PASSWORD_BUCKET"])
+    # A stored admin password, so the change-password and login flows work
+    # locally. Cheap rounds: this hash protects nothing.
+    local_hash = bcrypt.hashpw(b"dev-admin-password", bcrypt.gensalt(rounds=4)).decode()
+    s3.put_object(
+        Bucket=os.environ["PASSWORD_BUCKET"],
+        Key=os.environ["PASSWORD_KEY"],
+        Body=json.dumps({"admin_password_hash": local_hash}),
+    )
 
     # Settings the handlers read as plain rows. Admin password protection is
     # off so the admin console opens without a password locally; the staff

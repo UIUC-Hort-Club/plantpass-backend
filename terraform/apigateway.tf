@@ -83,6 +83,28 @@ resource "aws_apigatewayv2_stage" "default" {
   name        = "$default"
   auto_deploy = true
 
+  # The three routes that accept a password or send an email are slowed down
+  # so they cannot be tried at speed. Nobody is locked out: at an event every
+  # volunteer shares one network address, and a lock-out would stop checkout.
+  # Requests over the limit get 429 and can simply be retried.
+  route_settings {
+    route_key              = "POST /admin/login"
+    throttling_rate_limit  = 2
+    throttling_burst_limit = 5
+  }
+
+  route_settings {
+    route_key              = "POST /plantpass-access/verify"
+    throttling_rate_limit  = 5
+    throttling_burst_limit = 10
+  }
+
+  route_settings {
+    route_key              = "POST /admin/forgot-password"
+    throttling_rate_limit  = 1
+    throttling_burst_limit = 2
+  }
+
   tags = {
     application = "plantpass"
   }
