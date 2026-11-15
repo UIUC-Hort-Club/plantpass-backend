@@ -134,6 +134,8 @@ are not decisions; strike or change any of them.
 - The customer's receipt page says "Cancelled" for a cancelled order.
 - Orders get a database index on their event from the start, so one event's
   screens never read another event's orders.
+- The clear-all API route is removed along with the "Clear Records" button,
+  since a destructive route with no screen is only a risk.
 
 ## Open questions
 

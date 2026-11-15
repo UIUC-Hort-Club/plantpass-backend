@@ -34,7 +34,8 @@ def test_every_handler_folder_is_packaged_with_all_its_python_files(tmp_path):
         # Only *.py is packaged. Anything else in a handler folder would work
         # locally and be missing in production.
         files = [p for p in (ROOT / "lambda" / folder).iterdir() if p.name != "__pycache__"]
-        assert all(p.suffix == ".py" and p.is_file() for p in files), folder
+        strays = [p.name for p in files if p.suffix != ".py" or not p.is_file()]
+        assert not strays, f"{folder} holds files that would not be packaged: {strays}"
 
         with zipfile.ZipFile(tmp_path / name) as archive:
             assert archive.namelist() == sorted(p.name for p in files)

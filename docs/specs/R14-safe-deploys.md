@@ -5,7 +5,7 @@ Roadmap item: R14
 
 ## Problem and evidence
 
-Decision D9 and question Q7.
+Decisions D9 and D12 to D15.
 
 - **The club has nowhere to test.** The only running copy is production. With
   D4, production may hold a real event's orders on any day, so "try it on the

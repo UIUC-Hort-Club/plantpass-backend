@@ -5,7 +5,7 @@ through the filter in `PRODUCT.md`.
 
 **Status of this file:** first triaged by an agent on 2026-11-14 from the 2026
 sale report and a read of the code, then updated the same day with the
-architect's decisions D4–D10. Statuses: `proposed` → `approved` → `specced`
+architect's decisions (now D1–D25, in `DECISIONS.md`). Statuses: `proposed` → `approved` → `specced`
 (has a file in `specs/`) → `building` → `shipped`, or `declined`. Only the
 architect moves an item to `approved`.
 
@@ -16,9 +16,9 @@ architect moves an item to `approved`.
 | **April 9–11, 2027** | Spring plant sale (D5) |
 | March 26, 2027 | Freeze starts: nothing merges without the architect (D9) |
 | March 12–25 | Full rehearsal at last year's volume (R6); fixes only |
-| February 15 – March 12 | Club tests on the hosted test copy, ideally at a small real event (needs R14, Q9) |
+| February 15 – March 12 | Club tests on the hosted test copy (needs R14). No real event before the April sale (D16). |
 | February 12 | Everything below marked for 2027 is live on the test copy |
-| January | Cancel an order (R1), voucher cap, name trimming, paid-at (R2–R4), events and product import (R13), then R7–R11 as time allows |
+| January | Cancel an order (R1), voucher cap, name trimming, paid-at (R2–R4), events and product import (R13), then R7, then R8–R11 as time allows (D24) |
 | November – December 2026 | Foundations: security (S1, shipped), local test server (R5, shipped), test copy and safe deploys (R14), layer deploys (R15), shared-code cleanup (R12) |
 
 The dates were confirmed by the architect (D16). The build order is D25.
@@ -46,7 +46,7 @@ These come from the architect's direction rather than from the sale report.
 | ID | What | Why | Smallest version | Status |
 |---|---|---|---|---|
 | R13 | Run any event, with its own products | D4: the club will use this beyond the plant sale, with other catalogs such as lab supplies | Each order is stamped with the current event; analytics and export are per event; an organizer starts a new event without deleting the last one, and loads a product list from a spreadsheet. Plant-sale wording leaves the UI. Spec: `specs/R13-events-and-catalogs.md`. | approved (D17–D20); spec approved |
-| R14 | A test copy of the app, and deploys that are safe while it is in use | D9, Q7: the club must test before April; with D4 production can be live any day, and today a merge applies straight to it with no preview | A second copy of the stack at its own address that every merge deploys to first; production is released from a version already proven there, with an automatic smoke test and a one-step rollback. Spec: `specs/R14-safe-deploys.md`. | building (D12–D15); spec approved |
+| R14 | A test copy of the app, and deploys that are safe while it is in use | D9, D12: the club must test before April; with D4 production can be live any day, and today a merge applies straight to it with no preview | A second copy of the stack at its own address that every merge deploys to first; production is released from a version already proven there, with an automatic smoke test and a one-step rollback. Spec: `specs/R14-safe-deploys.md`. | building (D12–D15); spec approved |
 
 ## Worth doing if cheap
 
