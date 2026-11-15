@@ -1,9 +1,8 @@
 """
 The live-update channel must never carry an order.
 
-Connecting to it needs no login, so anything broadcast on it is public. The
-dashboard only needs to know that something changed; it then fetches the data
-through the API with its token.
+The dashboard only needs to know that something changed; it then fetches the
+data through the API with its token.
 """
 import importlib
 import json

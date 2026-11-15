@@ -124,7 +124,7 @@ Items:
             }
         )
         
-        logger.info(f"Receipt email sent to {recipient_email}, MessageId: {response['MessageId']}")
+        logger.info(f"Receipt email sent, MessageId: {response['MessageId']}")
         return True
         
     except ClientError as e:

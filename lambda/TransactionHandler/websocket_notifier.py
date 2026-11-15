@@ -60,9 +60,9 @@ def notify_transaction_update(event_type):
             return
         
         # Prepare message
-        # A "something changed" signal and nothing else. Connecting to this
-        # channel needs no login, so the order itself must never be sent on it;
-        # screens that want the data fetch it through the API with their token.
+        # A "something changed" signal and nothing else. Never put the order
+        # itself on this channel; screens that want the data fetch it through
+        # the API with their token.
         message = {
             'type': 'transaction_update',
             'event': event_type,

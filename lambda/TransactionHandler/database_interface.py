@@ -105,7 +105,7 @@ def update_transaction(transaction_id, updated_data):
                     Payload=json.dumps(email_payload)
                 )
                 
-                logger.info(f"Receipt email triggered for {transaction.customer_email}")
+                logger.info("Receipt email triggered")
             except Exception as e:
                 logger.error(f"Failed to trigger receipt email: {e}")
         

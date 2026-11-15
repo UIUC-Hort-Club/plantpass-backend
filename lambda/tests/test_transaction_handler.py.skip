@@ -95,7 +95,7 @@ class TestCreateTransaction:
         assert body['message'] == 'Transaction created successfully'
         assert body['transaction']['purchase_id'] == 'ABC-DEF'
         mock_database['create'].assert_called_once()
-        mock_websocket.assert_called_once_with('created', mock_transaction)
+        mock_websocket.assert_called_once_with('created')
     
     def test_create_transaction_validation_error(self, transaction_handler, mock_auth, api_gateway_event):
         """Test transaction creation with invalid data"""
@@ -213,7 +213,7 @@ class TestUpdateTransaction:
         assert response['statusCode'] == 200
         body = json.loads(response['body'])
         assert body['transaction']['purchase_id'] == 'ABC-DEF'
-        mock_websocket.assert_called_once_with('updated', updated_transaction)
+        mock_websocket.assert_called_once_with('updated')
     
     def test_update_transaction_invalid_id(self, transaction_handler, mock_auth, api_gateway_event):
         """Test updating transaction with invalid ID"""

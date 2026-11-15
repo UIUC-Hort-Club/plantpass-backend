@@ -29,8 +29,9 @@ plantpass/                     workspace folder (not a repo)
 Browser → CloudFront (`hortclubplantpass.org`) → S3 static site. The site reads
 `/config.js` at load for the API and WebSocket URLs. API calls go to API
 Gateway (HTTP API) → one Lambda per resource → DynamoDB. A WebSocket API pushes
-"transaction changed" events to open screens. Connecting to it needs no login,
-so a message says only that orders changed; never put order data on it.
+"transaction changed" events to open screens. A message says only that orders
+changed; never put order data on it. Screens fetch the data through the API
+with their token.
 
 ## API routes
 
