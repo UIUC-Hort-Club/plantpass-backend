@@ -23,8 +23,8 @@ Decision D9 and question Q7.
   deploy during an event should not be able to do that.
 - **There is no written way back.** `main` is already guarded by a ruleset in
   both repos ("Guardrail-Master": pull request required, squash only, no force
-  push, no deletion), but that ruleset does not require CI to pass, so a red
-  pull request can still be merged and deployed.
+  push, no deletion), but until 2026-11-14 that ruleset did not require CI to pass, so a
+  red pull request could be merged and deployed. (Fixed: see item 7.)
 - In 2026, fixes were merged the day before and the day of the sale.
 
 ## What the volunteer sees
@@ -103,10 +103,12 @@ not real" bar on every screen, so nobody rings up a real customer there.
 
 ## Ship plan
 
-In four small pull requests so each is easy to undo: (1) name suffix with a
-no-change production plan, (2) create the test copy, (3) split deploy into
-test-on-merge and release-to-production with smoke tests, (4) plan-on-PR and
-branch protection. Target: live by mid-December 2026 so the club's testing
+In small pull requests so each is easy to undo. Done first, so the rest can be
+previewed: the plan on every pull request, reproducible Lambda zips, and the
+"tests must pass" rule. Then: (1) name suffix with a no-change production
+plan, (2) create the test copy, (3) split deploy into test-on-merge and
+release-to-production with smoke tests and the localhost-config guard,
+(4) pinned build inputs. Target: live by mid-December 2026 so the club's testing
 window is not squeezed.
 
 ## Decided

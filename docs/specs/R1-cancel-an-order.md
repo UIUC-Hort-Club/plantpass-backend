@@ -33,9 +33,11 @@ Checker screen: no change. Customer receipt lookup: shows "Cancelled".
 2. `PUT /transactions/{id}` accepts `{"void": true}` for an unpaid order and
    `{"void": false}` to restore a cancelled one to unpaid. A paid order
    cannot be voided. No new route, so no Terraform change.
-3. Voided orders are left out of the recent-unpaid list (already true: the
-   list asks the index for `unpaid`) and out of every total in analytics
-   (already true: totals count paid orders only).
+3. Voided orders are left out of the recent-unpaid list and out of every total
+   in analytics. The list's main path already does this (it asks the index for
+   `unpaid`) and totals already count paid orders only, but the list's
+   fallback scan in `database_interface.py` keeps anything not paid and must
+   be changed to skip `void`.
 4. The export's `transactions.csv` gains a `status` column: `paid`, `unpaid`
    or `void`. The existing `paid` column stays, so old spreadsheets still work.
 5. The analytics order table shows the status.
@@ -47,7 +49,7 @@ Checker screen: no change. Customer receipt lookup: shows "Cancelled".
 - Voiding a paid order (a refund). The club handles refunds in person; add it
   if a sale shows refunds being recorded wrongly.
 - A screen listing cancelled orders. The export has them.
-- Hard delete from the staff screens; see question 1.
+- Hard delete from the staff screens (D21).
 
 ## Changes
 

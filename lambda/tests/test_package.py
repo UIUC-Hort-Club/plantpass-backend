@@ -31,12 +31,22 @@ def test_every_handler_folder_is_packaged_with_all_its_python_files(tmp_path):
 
     package.build(tmp_path)
     for folder, name in package.ZIPS.items():
+        # Only *.py is packaged. Anything else in a handler folder would work
+        # locally and be missing in production.
+        files = [p for p in (ROOT / "lambda" / folder).iterdir() if p.name != "__pycache__"]
+        assert all(p.suffix == ".py" and p.is_file() for p in files), folder
+
         with zipfile.ZipFile(tmp_path / name) as archive:
-            assert sorted(archive.namelist()) == sorted(
-                p.name for p in (ROOT / "lambda" / folder).glob("*.py")
-            )
+            assert archive.namelist() == sorted(p.name for p in files)
             source = (ROOT / "lambda" / folder / "lambda_handler.py").read_bytes()
             assert archive.read("lambda_handler.py") == source
+            # What makes the bytes the same on every machine and every run.
+            for info in archive.infolist():
+                assert (info.date_time, info.compress_type, info.external_attr) == (
+                    (1980, 1, 1, 0, 0, 0),
+                    zipfile.ZIP_STORED,
+                    0o644 << 16,
+                ), info.filename
 
 
 def test_zip_names_are_the_ones_terraform_is_given():

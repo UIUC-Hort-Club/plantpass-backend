@@ -64,9 +64,11 @@ how to meet each part. If you cannot meet one, ask the architect.
    - No test was deleted, skipped or loosened and no threshold lowered, unless
      the spec says so.
    - The change does what its spec or description says and nothing else.
-   - The pull request's `plan` job matches what you expect: open its summary
-     (`gh run view <run-id>` on the "Run Tests" run) and compare it line by
-     line with the list in the PR body. A change that should not touch
+   - The pull request's `plan` job matches what you expect. Read it from the
+     log (the summary is only on the web page):
+     `gh run view <run-id> --log --job <plan job id> | grep -E ' (will be|must be) |Plan:|No changes'`,
+     then read which attributes change for each resource listed. Compare line
+     by line with the list in the PR body. A change that should not touch
      infrastructure must plan as "No changes". Anything in the plan you did
      not expect is a stop, not a detail.
 

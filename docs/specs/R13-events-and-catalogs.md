@@ -55,22 +55,26 @@ picker on the export.
   organizer edits before an event, as now.
 - **Browsing a past event's orders in the app.** The export covers it.
 - **Search or categories on the checker's screen.** Only needed if a real
-  catalog is too long to scan; see question 2.
+  catalog is too long to scan (D18).
 
 ## Changes
 
 - Data: `event` (string) on the order, with an index on it; a `current_event`
   row in the settings table. Reading an order without `event` yields the 2026
-  sale. No new table.
+  sale. The settings table also keeps one read-only copy of the product list
+  with each finished event, saved when the next event starts and used only
+  to put `products.csv` in that event's export. It is not a catalog the
+  organizer can switch to (D20). No new table.
 - API: `GET/PUT` for the current event; `event` query parameter on export and
   analytics; `event` in order responses. The live frontend keeps working: all
   additions.
 - Backend files: `TransactionHandler/transaction.py`, `database_interface.py`,
-  `sales_analytics.py`, `csv_export.py`, `lambda_handler.py`;
+  `sales_analytics.py` (and the clear-all route and function removed: D19),
+  `csv_export.py`, `lambda_handler.py`;
   `FeatureTogglesHandler` (or a small sibling route) for the setting;
   `terraform/apigateway.tf` for new routes.
 - Frontend files: `AdminConsole/` (event header, start-event dialog, product
-  import/download, export picker), `Home/HomeScreen.tsx`,
+  import/download, export picker, and "Clear Records" removed: D19), `Home/HomeScreen.tsx`,
   `Home/PlantPassAccessModal.tsx`, `types/index.ts`.
 - Docs: `USAGE.md` gains "Running an event" (before, during, after).
 
@@ -102,6 +106,8 @@ orders and stay fast as past events accumulate (D11).
 - Product lists are CSV files in and out, and each event's export carries its
   product list (D20). So the export gains a `products.csv`, written from a
   copy of the list saved when the next event starts.
-- Assumed, not asked: discounts and payment methods are not per event; the
+- Assumed, not asked: the clear-all API route is removed along with the
+  console button, since a destructive route with no screen is only a risk;
+  discounts and payment methods are not per event; the
   app keeps its name with the event name under it; orders are indexed by event
   from the start rather than filtered after a full read.

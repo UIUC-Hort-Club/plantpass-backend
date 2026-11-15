@@ -47,7 +47,7 @@ def api():
     try:
         for _ in range(100):
             if server.poll() is not None:
-                pytest.fail("dev server exited at startup; its output is captured above")
+                pytest.fail("dev server exited at startup; see its captured output")
             try:
                 request("GET", "/feature-toggles")
                 break

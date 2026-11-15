@@ -137,5 +137,4 @@ are not decisions; strike or change any of them.
 
 ## Open questions
 
-None. One action is with the architect: set a new admin password and staff
-passphrase in production (see the private security notes).
+None.
