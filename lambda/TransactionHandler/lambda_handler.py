@@ -30,6 +30,15 @@ except ImportError:
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+def _has_valid_token(event):
+    from auth_middleware import extract_token, verify_token, AuthError
+    try:
+        verify_token(extract_token(event))
+        return True
+    except AuthError:
+        return False
+
+
 def lambda_handler(event, context):
     try:
         route_key = event.get("routeKey", "")
@@ -72,7 +81,7 @@ def lambda_handler(event, context):
             transaction = create_transaction(body)
             
             try:
-                notify_transaction_update('created', transaction)
+                notify_transaction_update('created')
             except Exception as notify_error:
                 logger.error(f"Failed to send WebSocket notification: {notify_error}")
             
@@ -90,7 +99,12 @@ def lambda_handler(event, context):
             transaction = read_transaction(purchase_id)
             if not transaction:
                 return create_response(404, {"message": "Transaction not found"})
-            
+
+            # This route is public so a customer can see their receipt by order
+            # ID. The email on the order is only for staff.
+            if not _has_valid_token(event):
+                transaction.pop("customer_email", None)
+
             return create_response(200, transaction)
         
         elif route_key == "GET /transactions/recent-unpaid":
@@ -122,7 +136,7 @@ def lambda_handler(event, context):
             updated_transaction = update_transaction(purchase_id, body)
             
             try:
-                notify_transaction_update('updated', updated_transaction)
+                notify_transaction_update('updated')
             except Exception as notify_error:
                 logger.error(f"Failed to send WebSocket notification: {notify_error}")
             
@@ -136,7 +150,7 @@ def lambda_handler(event, context):
             delete_transaction(purchase_id)
             
             try:
-                notify_transaction_update('deleted', {'purchase_id': purchase_id})
+                notify_transaction_update('deleted')
             except Exception as notify_error:
                 logger.error(f"Failed to send WebSocket notification: {notify_error}")
             
@@ -169,7 +183,7 @@ def lambda_handler(event, context):
             cleared_count = clear_all_transactions()
             
             try:
-                notify_transaction_update('cleared', {'cleared_count': cleared_count})
+                notify_transaction_update('cleared')
             except Exception as notify_error:
                 logger.error(f"Failed to send WebSocket notification: {notify_error}")
             
