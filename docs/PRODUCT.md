@@ -64,6 +64,29 @@ product list; nobody has measured one yet.
 
 When these pull against each other, the lower number wins.
 
+## Always true, never traded
+
+The architect's standing brief (decision D11): the app is **secure, easy to
+use, lightweight and fast, and optimized for AI-driven development**. Easy and
+lightweight are principles 1 and 5 above. The other three are not ranked,
+because nothing above is allowed to cost them. Each is the bar a change is
+held to, not a description of the code today; where the code falls short, the
+gap is tracked and closing it comes before new features:
+
+- **Secure.** The repos are public and the app holds customer emails and the
+  club's sales record. Every route that changes or reveals data checks who is
+  asking; no secret lives in source; a login cannot be guessed at without
+  limit. A feature that needs a security shortcut is not ready.
+- **Fast.** A volunteer on a phone, on crowded event Wi-Fi, should never wait
+  on the app. A screen that gets slower as the day's orders pile up is a bug.
+  Measure before and after anything that touches the order screens or reads
+  the whole order table.
+- **Built for agents to change safely.** Any change can be made, checked and
+  run locally by an agent without touching production; the rules a change must
+  respect are written down and tested, not remembered; a deploy can be
+  previewed and undone. When a change is hard for an agent to verify, fix
+  that before building the next feature.
+
 ## The filter: does this need to exist?
 
 Ask these in order. Stop at the first "no".

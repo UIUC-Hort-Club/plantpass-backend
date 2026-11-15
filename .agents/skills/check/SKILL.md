@@ -28,7 +28,7 @@ This creates `.venv` on first run, then runs:
 |---|---|
 | `pytest` in `lambda/` | handler routing, auth middleware, validation, order money math, and that the copied shared helpers are identical |
 | `terraform fmt -check` | formatting, which CI would not catch |
-| `terraform validate` | the Terraform parses and references resolve. It does **not** show what an apply would change. |
+| `terraform validate` | the Terraform parses and references resolve. It does **not** show what an apply would change; the pull request's `plan` job does that. |
 
 ## Frontend
 

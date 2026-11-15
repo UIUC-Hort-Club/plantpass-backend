@@ -79,18 +79,10 @@ jobs:
           cd layers/shared-utils
           zip -r ../../terraform/shared_utils_layer.zip python
 
+      # Reproducible zips: the same code gives the same bytes, so Terraform
+      # only updates a function whose code changed.
       - name: Package Lambda functions
-        run: |
-          cd lambda/TransactionHandler && zip -r ../../terraform/transactions_handler_lambda_package.zip *.py
-          cd ../AdminAuthHandler && zip -r ../../terraform/admin_password_lambda_package.zip .
-          cd ../ProductsHandler && zip -r ../../terraform/products_handler_lambda_package.zip *.py
-          cd ../DiscountsHandler && zip -r ../../terraform/discounts_handler_lambda_package.zip *.py
-          cd ../PaymentMethodsHandler && zip -r ../../terraform/payment_methods_handler_lambda_package.zip *.py
-          cd ../WebSocketHandler && zip -r ../../terraform/websocket_handler_lambda_package.zip *.py
-          cd ../EmailHandler && zip -r ../../terraform/emailhandler_lambda_package.zip *.py
-          cd ../LockHandler && zip -r ../../terraform/lockhandler_lambda_package.zip *.py
-          cd ../FeatureTogglesHandler && zip -r ../../terraform/featuretoggleshandler_lambda_package.zip *.py
-          cd ../PlantPassAccessHandler && zip -r ../../terraform/plantpassaccess_lambda_package.zip *.py
+        run: python scripts/package.py
 
       - name: Upload Lambda packages
         uses: actions/upload-artifact@v4
@@ -128,20 +120,9 @@ jobs:
       - name: Terraform Init & Apply
         working-directory: ./terraform
         run: |
+          # The zip paths are in terraform.tfvars.
           terraform init -input=false
-          terraform apply -auto-approve -input=false -lock-timeout=60s \
-            -var "transaction_lambda_zip_path=transactions_handler_lambda_package.zip" \
-            -var "admin_lambda_zip_path=admin_password_lambda_package.zip" \
-            -var "products_lambda_zip_path=products_handler_lambda_package.zip" \
-            -var "discounts_lambda_zip_path=discounts_handler_lambda_package.zip" \
-            -var "payment_methods_lambda_zip_path=payment_methods_handler_lambda_package.zip" \
-            -var "websocket_lambda_zip_path=websocket_handler_lambda_package.zip" \
-            -var "email_lambda_zip_path=emailhandler_lambda_package.zip" \
-            -var "lock_lambda_zip_path=lockhandler_lambda_package.zip" \
-            -var "feature_toggles_lambda_zip_path=featuretoggleshandler_lambda_package.zip" \
-            -var "plantpass_access_lambda_zip_path=plantpassaccess_lambda_package.zip" \
-            -var "auth_layer_zip_path=auth_layer.zip" \
-            -var "shared_utils_layer_zip_path=shared_utils_layer.zip"
+          terraform apply -auto-approve -input=false -lock-timeout=60s
 
       - name: Output deployment info
         working-directory: ./terraform

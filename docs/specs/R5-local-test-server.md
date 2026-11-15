@@ -1,6 +1,6 @@
 # R5 — A safe place to try changes
 
-Status: approved 2026-11-14 (approach decided in D6)
+Status: shipped 2026-11-14 (approach decided in D6)
 Roadmap item: R5
 
 ## Problem and evidence

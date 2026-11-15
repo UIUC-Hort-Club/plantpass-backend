@@ -38,4 +38,4 @@ is the typed command that starts it. Use it when a spec's "Questions for the
 architect" need settling.
 
 Upstream asks a whole round of questions at once. The architect prefers them
-one at a time; ask that way unless told otherwise.
+one at a time; that rule is in `AGENTS.md`, where agents read it.

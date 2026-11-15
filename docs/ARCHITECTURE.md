@@ -109,7 +109,9 @@ because the committed `public/config.js` points there. Sample products are
 loaded on start, nothing is saved between runs, the staff passphrase is `dev`
 and admin login needs no password.
 
-What local does not have: the WebSocket API and email (both skipped), and
+What local does not have: the WebSocket API and email (both skipped), the
+admin password flows (no password is stored, so turning on "Password Protect
+Admin Console" locally locks you out until you restart the server), and
 anything API Gateway, IAM or real DynamoDB does differently from the fakes. A
 change that depends on those is not proven until it runs in AWS.
 
@@ -125,8 +127,16 @@ URLs. To read them, fetch `https://hortclubplantpass.org/config.js`.
 Merging to `main` deploys. There is no other step and no approval gate in CI.
 
 - **Backend** (`.github/workflows/deploy-backend.yaml`): pytest → build the two
-  layers and zip each handler's `*.py` → `terraform apply -auto-approve`. State
-  is in S3. Never run `terraform apply` from a laptop.
+  layers and zip each handler's `*.py` (`scripts/package.py`) → `terraform
+  apply -auto-approve`. State is in S3. Never run `terraform apply` from a
+  laptop.
+- **Every backend pull request shows its plan.** The `plan` job in
+  `.github/workflows/test.yaml` runs `terraform plan` against production and
+  puts the result in the job summary: which resources would be created,
+  changed or destroyed, or "No changes". It never applies.
+- **The Lambda zips are reproducible.** The same code gives the same bytes, so
+  a deploy updates only the functions whose code changed and a docs-only
+  change plans as "No changes". `tests/test_package.py` guards this.
 - **Frontend** (`.github/workflows/deploy-frontend.yaml`): lint + vitest →
   `npm run build` → write `dist/config.js` from repo secrets → `aws s3 sync
   --delete` → CloudFront invalidation.
@@ -141,11 +151,15 @@ in that handler's `lambda_handler.py`; if public, add it to
 file in `plantpass-frontend/src/api/`; the type in `src/types/index.ts`.
 
 **A new Lambda** also needs: function, log group and permission in
-`terraform/lambda.tf`; a zip-path variable in `terraform/variables.tf`; a zip
-line **and** a `-var` line in `deploy-backend.yaml`. Miss the workflow lines
-and the deploy fails after merge. For the local copy, add its folder to
+`terraform/lambda.tf`; a zip-path variable in `terraform/variables.tf` with its
+value in `terraform/terraform.tfvars`; and an entry in `ZIPS` in
+`scripts/package.py` (`tests/test_package.py` fails if a handler folder is
+missing there). For the local copy, add its folder to
 `HANDLERS` in `scripts/dev_server.py`, and any new table to `TABLES` there;
-the server refuses to start until both match the Terraform.
+the server refuses to start when a route's first path segment has no entry in
+`HANDLERS` or a table is missing from `TABLES`. It does not notice a new Lambda
+whose routes sit under an existing first segment; those requests go to the
+existing handler.
 
 **A field on the order:** `transaction.py` (`_initialize_from_json`,
 `_initialize_from_db` with a default for old records, `to_dict`); validation in
