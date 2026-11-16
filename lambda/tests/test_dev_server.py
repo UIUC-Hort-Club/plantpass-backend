@@ -118,9 +118,16 @@ def test_an_order_from_entry_to_paid(api, staff):
     # the cashier's backlog, served by the payment-status index
     assert order_id in unpaid_ids(api, staff)
 
-    # the customer's receipt lookup needs no login
+    # the customer's receipt lookup needs no login, and does not show the email
     status, receipt = api("GET", f"/transactions/{order_id}")
     assert status == 200 and receipt["receipt"]["total"] == 17.0
+    assert "customer_email" not in receipt
+    # the cashier, logged in, still sees it
+    status, for_staff = api("GET", f"/transactions/{order_id}", token=staff)
+    assert status == 200 and for_staff["customer_email"] == "customer@example.com"
+    # a bad token is treated as no token, not as an error
+    status, bad = api("GET", f"/transactions/{order_id}", token="not-a-token")
+    assert status == 200 and "customer_email" not in bad
 
     # the cashier corrects the quantity; the percent discount follows, and the
     # price stays what it was when the order was entered, whatever is sent

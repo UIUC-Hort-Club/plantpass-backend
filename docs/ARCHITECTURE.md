@@ -29,7 +29,9 @@ plantpass/                     workspace folder (not a repo)
 Browser → CloudFront (`hortclubplantpass.org`) → S3 static site. The site reads
 `/config.js` at load for the API and WebSocket URLs. API calls go to API
 Gateway (HTTP API) → one Lambda per resource → DynamoDB. A WebSocket API pushes
-"transaction changed" events to open screens.
+"transaction changed" events to open screens. A message says only that orders
+changed; never put order data on it. Screens fetch the data through the API
+with their token.
 
 ## API routes
 
@@ -39,7 +41,7 @@ out of date.
 | Route | Lambda | Who may call |
 |---|---|---|
 | `POST /transactions` | TransactionHandler | staff or admin token |
-| `GET /transactions/{purchase_id}` | TransactionHandler | **public** (customer receipt lookup) |
+| `GET /transactions/{purchase_id}` | TransactionHandler | **public** (customer receipt lookup); `customer_email` is included only for a caller with a valid token |
 | `PUT /transactions/{purchase_id}` | TransactionHandler | staff or admin token |
 | `DELETE /transactions/{purchase_id}` | TransactionHandler | staff or admin token |
 | `GET /transactions/recent-unpaid` | TransactionHandler | staff or admin token |

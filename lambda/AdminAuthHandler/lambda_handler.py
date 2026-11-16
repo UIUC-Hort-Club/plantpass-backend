@@ -76,7 +76,6 @@ def is_password_protect_admin_enabled():
 def lambda_handler(event, context):
     try:
         logger.info(f"=== Lambda Invoked ===")
-        logger.info(f"Event: {json.dumps(event)}")
         
         body = json.loads(event.get("body", "{}"))
         route_key = event.get("routeKey", "")
@@ -102,7 +101,6 @@ def lambda_handler(event, context):
             pw_hash = get_password_hash()
             password = body.get("password", "")
             
-            logger.info(f"Password length: {len(password)}")
             logger.info(f"Password hash from S3 exists: {bool(pw_hash)}")
 
             # Check regular password first
@@ -183,7 +181,6 @@ def lambda_handler(event, context):
             logger.info("=== Forgot Password Request ===")
             # Generate temporary password
             temp_password = generate_temp_password()
-            logger.info(f"Generated temp password length: {len(temp_password)}")
             
             temp_hash = bcrypt.hashpw(temp_password.encode(), bcrypt.gensalt()).decode()
             logger.info("Temp password hashed successfully")

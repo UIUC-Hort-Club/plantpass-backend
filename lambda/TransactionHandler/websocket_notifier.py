@@ -31,13 +31,12 @@ def get_api_gateway_client():
     return apigateway_management
 
 
-def notify_transaction_update(event_type, transaction_data):
+def notify_transaction_update(event_type):
     """
-    Broadcast transaction update to all connected WebSocket clients.
-    
+    Tell every connected WebSocket client that orders changed.
+
     Args:
-        event_type: Type of event ('created', 'updated', 'deleted', 'cleared')
-        transaction_data: Transaction data to send
+        event_type: 'created', 'updated', 'deleted' or 'cleared'
     """
     try:
         client = get_api_gateway_client()
@@ -61,11 +60,12 @@ def notify_transaction_update(event_type, transaction_data):
             return
         
         # Prepare message
+        # A "something changed" signal and nothing else. Never put the order
+        # itself on this channel; screens that want the data fetch it through
+        # the API with their token.
         message = {
             'type': 'transaction_update',
             'event': event_type,
-            'data': transaction_data,
-            'timestamp': transaction_data.get('timestamp') if isinstance(transaction_data, dict) else None
         }
         
         message_data = json.dumps(message).encode('utf-8')
