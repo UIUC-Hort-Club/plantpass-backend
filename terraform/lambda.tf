@@ -222,8 +222,9 @@ resource "aws_lambda_function" "admin" {
 }
 
 # The six functions below ran on the defaults: 3 seconds and 128 MB. Waking from
-# idle was measured at 2.7 seconds, and a slower wake-up timed out and gave the
-# caller a 500. More memory also means a faster wake-up.
+# idle was measured at 2.7 seconds, and a slower wake-up timing out is the likely
+# cause of two 500s seen on the first request after a deploy (not confirmed in
+# the logs). More memory also means a faster wake-up.
 resource "aws_lambda_function" "products_handler" {
   function_name    = "ProductsHandler"
   filename         = var.products_lambda_zip_path

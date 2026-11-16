@@ -61,9 +61,10 @@ out of date.
 Which routes are public is decided by `is_public_endpoint()` in
 `auth_middleware.py`. Tokens are HS256 JWTs carrying `role: staff | admin`.
 
-Three routes are slowed down at the API stage (`route_settings` in
-`terraform/apigateway.tf`): admin login, the passphrase check, and "forgot
-password". Over the limit they answer 429 and can be retried. Nothing locks
+Four routes are slowed down at the API stage (`route_settings` in
+`terraform/apigateway.tf`): admin login, the passphrase check, "forgot
+password" and "change password". Changing the admin password needs an admin's
+token; a staff token is refused. Over the limit they answer 429 and can be retried. Nothing locks
 anyone out, because at an event every volunteer shares one network address. A
 new admin password must be at least 12 characters, and "forgot password" can
 be asked once a minute.
@@ -159,8 +160,9 @@ in that handler's `lambda_handler.py`; if public, add it to
 `is_public_endpoint()` in every copy of `auth_middleware.py` (see below); a
 file in `plantpass-frontend/src/api/`; the type in `src/types/index.ts`.
 
-**A new Lambda** also needs: function, log group and permission in
-`terraform/lambda.tf`; a zip-path variable in `terraform/variables.tf` with its
+**A new Lambda** also needs: function (with its own `timeout` and
+`memory_size`; the defaults of 3 seconds and 128 MB are too tight for a
+wake-up from idle), log group and permission in `terraform/lambda.tf`; a zip-path variable in `terraform/variables.tf` with its
 value in `terraform/terraform.tfvars`; and an entry in `ZIPS` in
 `scripts/package.py` (`tests/test_package.py` fails if a handler folder is
 missing there). For the local copy, add its folder to
@@ -193,9 +195,7 @@ the export; `src/types/index.ts`; `tests/types/contract-validation.test.ts`.
    Decimal on the way into DynamoDB. Percent discounts can produce long
    fractions; round deliberately when you touch this.
 5. **Lambdas run Python 3.11.** Local virtualenvs may be newer. Do not use
-   syntax or stdlib newer than 3.11. Give a new Lambda `timeout` and
-   `memory_size` in `terraform/lambda.tf`: the defaults (3 seconds, 128 MB)
-   are too tight for a wake-up from idle.
+   syntax or stdlib newer than 3.11.
 6. **Staff access with the passphrase turned off.** With
    `protectPlantPassAccess` off the frontend skips the passphrase prompt, so
    the device never receives a staff token, yet every staff route requires one.
