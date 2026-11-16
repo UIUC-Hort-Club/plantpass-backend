@@ -108,8 +108,8 @@ apply may have partly applied; say so.
 
 Read-only requests only. The production API URL is in the live site's config,
 not in the repo (the committed `config.js` points at the local dev server).
-Wait about ten seconds after a backend deploy before the first request: every
-deploy updates every Lambda, and a request that lands mid-update can fail once.
+Wait about ten seconds after a backend deploy before the first request: a
+request that lands while a function is being updated can fail once.
 
 ```bash
 API=$(curl -s https://hortclubplantpass.org/config.js | grep -o "https://[a-z0-9]*\.execute-api[^'/]*")

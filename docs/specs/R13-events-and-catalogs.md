@@ -72,7 +72,8 @@ picker on the export.
   `sales_analytics.py` (and the clear-all route and function removed: D19),
   `csv_export.py`, `lambda_handler.py`;
   `FeatureTogglesHandler` (or a small sibling route) for the setting;
-  `terraform/apigateway.tf` for new routes.
+  `terraform/apigateway.tf` for new routes and `terraform/dynamodb.tf` for the
+  index.
 - Frontend files: `AdminConsole/` (event header, start-event dialog, product
   import/download, export picker, and "Clear Records" removed: D19), `Home/HomeScreen.tsx`,
   `Home/PlantPassAccessModal.tsx`, `types/index.ts`.

@@ -117,6 +117,11 @@ copy of the shared code; (3) cancel an order, then voucher cap, name trimming,
 paid-at; (4) events and product import; (5) the passphrase toggle, unpaid age,
 readable export, starting stock, vendor tag; (6) rehearsal in March.
 
+**D26 — 2026-11-15 — Security fixes found in the audit, and two small
+sale-stopping bugs, go ahead of the test copy.** This changes the first step of
+D25; the rest of that order stands. The two bugs: a product saved at $0.00
+makes every order fail, and a double tap on "Enter Order" creates two orders.
+
 ## Assumed, not asked
 
 Small choices the agent made under D11 rather than put to the architect. They
@@ -134,6 +139,8 @@ are not decisions; strike or change any of them.
 - The customer's receipt page says "Cancelled" for a cancelled order.
 - Orders get a database index on their event from the start, so one event's
   screens never read another event's orders.
+- The clear-all API route is removed along with the "Clear Records" button,
+  since a destructive route with no screen is only a risk.
 
 ## Open questions
 

@@ -70,8 +70,7 @@ The architect's standing brief (decision D11): the app is **secure, easy to
 use, lightweight and fast, and optimized for AI-driven development**. Easy and
 lightweight are principles 1 and 5 above. The other three are not ranked,
 because nothing above is allowed to cost them. Each is the bar a change is
-held to, not a description of the code today; where the code falls short, the
-gap is tracked and closing it comes before new features:
+held to, not a description of the code today:
 
 - **Secure.** The repos are public and the app holds customer emails and the
   club's sales record. Every route that changes or reveals data checks who is
