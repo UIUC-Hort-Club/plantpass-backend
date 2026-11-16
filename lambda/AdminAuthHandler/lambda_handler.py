@@ -12,7 +12,8 @@ from temp_password_manager import (
     generate_temp_password,
     store_temp_password,
     get_temp_password_hash,
-    delete_temp_password
+    delete_temp_password,
+    seconds_since_temp_password_issued
 )
 
 logger = logging.getLogger()
@@ -20,6 +21,10 @@ logger.setLevel(logging.INFO)
 
 FEATURE_TOGGLES_TABLE_ENV = "FEATURE_TOGGLES_TABLE_NAME"
 DEFAULT_PASSWORD_PROTECT_ADMIN = True
+# Login tries are slowed down at the API (terraform/apigateway.tf), never locked
+# out, so a long password is what makes guessing useless.
+MIN_ADMIN_PASSWORD_LENGTH = 12
+FORGOT_PASSWORD_COOLDOWN_SECONDS = 60
 
 s3 = boto3.client("s3")
 
@@ -167,6 +172,11 @@ def lambda_handler(event, context):
             old_pw = body.get("old_password", "")
             new_pw = body.get("new_password", "")
 
+            if len(new_pw) < MIN_ADMIN_PASSWORD_LENGTH:
+                return create_response(400, {
+                    "error": f"New password must be at least {MIN_ADMIN_PASSWORD_LENGTH} characters"
+                })
+
             # If using temp token, skip old password check
             if not is_temp:
                 pw_hash = get_password_hash()
@@ -179,6 +189,13 @@ def lambda_handler(event, context):
 
         if route_key == "POST /admin/forgot-password":
             logger.info("=== Forgot Password Request ===")
+            # No login is needed to ask, and each request emails the club, so
+            # one request a minute.
+            waited = seconds_since_temp_password_issued()
+            if waited is not None and waited < FORGOT_PASSWORD_COOLDOWN_SECONDS:
+                return create_response(429, {
+                    "error": "A reset email was just sent. Please wait a minute before asking again."
+                })
             # Generate temporary password
             temp_password = generate_temp_password()
             

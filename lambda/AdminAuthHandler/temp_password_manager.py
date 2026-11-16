@@ -18,9 +18,21 @@ def generate_temp_password(length=12):
     alphabet = string.ascii_letters + string.digits
     return ''.join(secrets.choice(alphabet) for _ in range(length))
 
+TEMP_PASSWORD_MINUTES = 15
+
+
+def seconds_since_temp_password_issued():
+    """How long ago a temporary password was issued, or None if none is stored."""
+    item = table.get_item(Key={'id': 'temp_password'}).get('Item')
+    if not item:
+        return None
+    issued = int(item.get('expiration', 0)) - TEMP_PASSWORD_MINUTES * 60
+    return int(datetime.utcnow().timestamp()) - issued
+
+
 def store_temp_password(temp_password_hash):
     """Store temporary password hash with 15-minute expiration"""
-    expiration_time = int((datetime.utcnow() + timedelta(minutes=15)).timestamp())
+    expiration_time = int((datetime.utcnow() + timedelta(minutes=TEMP_PASSWORD_MINUTES)).timestamp())
     
     logger.info(f"Storing temp password in table: {table_name}")
     logger.info(f"Expiration timestamp: {expiration_time}")

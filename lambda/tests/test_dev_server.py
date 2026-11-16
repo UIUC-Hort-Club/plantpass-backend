@@ -189,3 +189,23 @@ def test_a_deleted_order_is_gone(api, staff):
     assert api("DELETE", f"/transactions/{order_id}", token=staff)[0] == 204
     assert api("GET", f"/transactions/{order_id}")[0] == 404
     assert order_id not in unpaid_ids(api, staff)
+
+
+def test_a_new_admin_password_must_be_at_least_twelve_characters(api, admin):
+    def change(old, new):
+        return api("POST", "/admin/change-password", {"old_password": old, "new_password": new}, admin)
+
+    status, body = change("dev-admin-password", "elevenchars")
+    assert status == 400 and "12" in body["error"]
+    assert change("not the password", "twelve chars")[0] == 401
+    assert change("dev-admin-password", "twelve chars")[0] == 200
+    # the new one is now the password
+    assert change("dev-admin-password", "another long one")[0] == 401
+    assert change("twelve chars", "another long one")[0] == 200
+
+
+def test_forgot_password_can_be_asked_once_a_minute(api):
+    assert api("POST", "/admin/forgot-password", {})[0] == 200
+    status, body = api("POST", "/admin/forgot-password", {})
+    assert status == 429 and "wait" in body["error"].lower()
+
