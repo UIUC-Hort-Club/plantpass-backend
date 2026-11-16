@@ -202,6 +202,22 @@ def test_a_new_admin_password_must_be_at_least_twelve_characters(api, admin):
     # the new one is now the password
     assert change("dev-admin-password", "another long one")[0] == 401
     assert change("twelve chars", "another long one")[0] == 200
+    # odd values get a plain refusal, not a server error
+    assert change("another long one", "x" * 73)[0] == 400
+    assert change("another long one", 123456789012)[0] == 400
+
+
+def test_the_length_rule_also_applies_after_a_password_reset(api):
+    # After "forgot password" the organizer holds a temporary token, which may
+    # set a new password without the old one. Sign one the way the server does.
+    import jwt
+
+    secret = re.search(r'JWT_SECRET="([^"]+)"', SERVER.read_text()).group(1)
+    temporary = jwt.encode({"exp": time.time() + 600, "temp": True, "role": "admin"}, secret, algorithm="HS256")
+
+    status, body = api("POST", "/admin/change-password", {"new_password": "elevenchars"}, temporary)
+    assert status == 400 and "12" in body["error"]
+    assert api("POST", "/admin/change-password", {"new_password": "twelve chars"}, temporary)[0] == 200
 
 
 def test_forgot_password_can_be_asked_once_a_minute(api):

@@ -4,7 +4,7 @@ import os
 import boto3
 import secrets
 import string
-from datetime import datetime, timedelta
+import time
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -27,12 +27,12 @@ def seconds_since_temp_password_issued():
     if not item:
         return None
     issued = int(item.get('expiration', 0)) - TEMP_PASSWORD_MINUTES * 60
-    return int(datetime.utcnow().timestamp()) - issued
+    return int(time.time()) - issued
 
 
 def store_temp_password(temp_password_hash):
     """Store temporary password hash with 15-minute expiration"""
-    expiration_time = int((datetime.utcnow() + timedelta(minutes=TEMP_PASSWORD_MINUTES)).timestamp())
+    expiration_time = int(time.time()) + TEMP_PASSWORD_MINUTES * 60
     
     logger.info(f"Storing temp password in table: {table_name}")
     logger.info(f"Expiration timestamp: {expiration_time}")
@@ -59,7 +59,7 @@ def get_temp_password_hash():
         
         item = response['Item']
         expiration = int(item.get('expiration', 0))  # Convert Decimal to int
-        current_time = int(datetime.utcnow().timestamp())  # Convert to int
+        current_time = int(time.time())
         
         logger.info(f"Current timestamp: {current_time}")
         logger.info(f"Expiration timestamp: {expiration}")
