@@ -122,6 +122,17 @@ sale-stopping bugs, go ahead of the test copy.** This changes the first step of
 D25; the rest of that order stands. The two bugs: a product saved at $0.00
 makes every order fail, and a double tap on "Enter Order" creates two orders.
 
+**D27 — 2026-11-16 — Guessing at logins is slowed down, and nobody is ever
+locked out.** The three routes that take a password or send a reset email are
+rate-limited, a new admin password must be at least 12 characters, and "forgot
+password" can be asked once a minute. A lock-out after failed tries was
+declined: at an event every volunteer shares one network address, so a few
+typos could stop checkout.
+
+**D28 — 2026-11-16 — The six Lambdas that ran on the default limits get 10
+seconds and 256 MB.** One was measured waking from idle in 2.7 seconds against
+a 3-second limit, and the first request after two deploys failed once.
+
 ## Assumed, not asked
 
 Small choices the agent made under D11 rather than put to the architect. They

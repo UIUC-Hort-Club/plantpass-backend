@@ -172,10 +172,13 @@ def lambda_handler(event, context):
             old_pw = body.get("old_password", "")
             new_pw = body.get("new_password", "")
 
-            if len(new_pw) < MIN_ADMIN_PASSWORD_LENGTH:
+            if not isinstance(new_pw, str) or len(new_pw) < MIN_ADMIN_PASSWORD_LENGTH:
                 return create_response(400, {
                     "error": f"New password must be at least {MIN_ADMIN_PASSWORD_LENGTH} characters"
                 })
+            # bcrypt reads only the first 72 bytes; refuse rather than cut silently
+            if len(new_pw.encode()) > 72:
+                return create_response(400, {"error": "New password must be 72 characters or fewer"})
 
             # If using temp token, skip old password check
             if not is_temp:

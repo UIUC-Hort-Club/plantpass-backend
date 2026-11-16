@@ -221,12 +221,17 @@ resource "aws_lambda_function" "admin" {
   }
 }
 
+# The six functions below ran on the defaults: 3 seconds and 128 MB. Waking from
+# idle was measured at 2.7 seconds, and a slower wake-up timed out and gave the
+# caller a 500. More memory also means a faster wake-up.
 resource "aws_lambda_function" "products_handler" {
   function_name    = "ProductsHandler"
   filename         = var.products_lambda_zip_path
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.11"
   role             = aws_iam_role.lambda_exec.arn
+  timeout          = 10
+  memory_size      = 256
   source_code_hash = filebase64sha256(var.products_lambda_zip_path)
   depends_on = [
     aws_cloudwatch_log_group.products_handler_logs
@@ -255,6 +260,8 @@ resource "aws_lambda_function" "discounts_handler" {
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.11"
   role             = aws_iam_role.lambda_exec.arn
+  timeout          = 10
+  memory_size      = 256
   source_code_hash = filebase64sha256(var.discounts_lambda_zip_path)
   depends_on = [
     aws_cloudwatch_log_group.discounts_handler_logs
@@ -283,6 +290,8 @@ resource "aws_lambda_function" "payment_methods_handler" {
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.11"
   role             = aws_iam_role.lambda_exec.arn
+  timeout          = 10
+  memory_size      = 256
   source_code_hash = filebase64sha256(var.payment_methods_lambda_zip_path)
   depends_on = [
     aws_cloudwatch_log_group.payment_methods_handler_logs
@@ -311,6 +320,8 @@ resource "aws_lambda_function" "lock_handler" {
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.11"
   role             = aws_iam_role.lambda_exec.arn
+  timeout          = 10
+  memory_size      = 256
   source_code_hash = filebase64sha256(var.lock_lambda_zip_path)
   depends_on = [
     aws_cloudwatch_log_group.lock_handler_logs
@@ -339,6 +350,8 @@ resource "aws_lambda_function" "feature_toggles_handler" {
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.11"
   role             = aws_iam_role.lambda_exec.arn
+  timeout          = 10
+  memory_size      = 256
   source_code_hash = filebase64sha256(var.feature_toggles_lambda_zip_path)
   depends_on = [
     aws_cloudwatch_log_group.feature_toggles_handler_logs
@@ -367,6 +380,8 @@ resource "aws_lambda_function" "plantpass_access_handler" {
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.11"
   role             = aws_iam_role.lambda_exec.arn
+  timeout          = 10
+  memory_size      = 256
   source_code_hash = filebase64sha256(var.plantpass_access_lambda_zip_path)
   depends_on = [
     aws_cloudwatch_log_group.plantpass_access_handler_logs

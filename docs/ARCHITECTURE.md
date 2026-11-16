@@ -193,7 +193,9 @@ the export; `src/types/index.ts`; `tests/types/contract-validation.test.ts`.
    Decimal on the way into DynamoDB. Percent discounts can produce long
    fractions; round deliberately when you touch this.
 5. **Lambdas run Python 3.11.** Local virtualenvs may be newer. Do not use
-   syntax or stdlib newer than 3.11.
+   syntax or stdlib newer than 3.11. Give a new Lambda `timeout` and
+   `memory_size` in `terraform/lambda.tf`: the defaults (3 seconds, 128 MB)
+   are too tight for a wake-up from idle.
 6. **Staff access with the passphrase turned off.** With
    `protectPlantPassAccess` off the frontend skips the passphrase prompt, so
    the device never receives a staff token, yet every staff route requires one.

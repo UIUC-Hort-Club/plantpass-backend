@@ -88,19 +88,19 @@ resource "aws_apigatewayv2_stage" "default" {
   # volunteer shares one network address, and a lock-out would stop checkout.
   # Requests over the limit get 429 and can simply be retried.
   route_settings {
-    route_key              = "POST /admin/login"
+    route_key              = aws_apigatewayv2_route.admin_login_route.route_key
     throttling_rate_limit  = 2
     throttling_burst_limit = 5
   }
 
   route_settings {
-    route_key              = "POST /plantpass-access/verify"
+    route_key              = aws_apigatewayv2_route.verify_plantpass_access.route_key
     throttling_rate_limit  = 5
     throttling_burst_limit = 10
   }
 
   route_settings {
-    route_key              = "POST /admin/forgot-password"
+    route_key              = aws_apigatewayv2_route.admin_forgot_password.route_key
     throttling_rate_limit  = 1
     throttling_burst_limit = 2
   }
