@@ -54,7 +54,8 @@ out of date.
 | `GET/PUT /plantpass-access` | PlantPassAccessHandler | admin |
 | `POST /plantpass-access/verify` | PlantPassAccessHandler | **public**; returns a 24h staff token |
 | `POST /admin/login`, `/admin/forgot-password` | AdminAuthHandler | **public**; login returns a 24h admin token |
-| `POST /admin/change-password`, `/admin/reset-password` | AdminAuthHandler | see handler |
+| `POST /admin/change-password` | AdminAuthHandler | admin token (a temporary one from a reset may skip the old password) |
+| `POST /admin/reset-password` | AdminAuthHandler | routed but not implemented: answers 404 |
 | none | EmailHandler | no API route, on purpose: it does no authentication. TransactionHandler and AdminAuthHandler invoke it directly. |
 | `POST /products`, `PUT`/`DELETE /products/{SKU}`, and the same three for `/discounts` | ProductsHandler, DiscountsHandler | routed in Terraform but not implemented: the handlers answer 404. The frontend saves whole lists with `PUT`. |
 
