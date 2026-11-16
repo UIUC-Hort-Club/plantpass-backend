@@ -206,6 +206,8 @@ def test_a_new_admin_password_must_be_at_least_twelve_characters(api, admin):
     assert change("another long one", "x" * 73)[0] == 400
     assert change("another long one", "é" * 40)[0] == 400  # 40 characters, 80 bytes
     assert change("another long one", 123456789012)[0] == 400
+    assert change("x" * 73, "a new long password")[0] == 401
+    assert change(123456789012, "a new long password")[0] == 401
     # leave the server as the next test expects to find it
     assert change("another long one", "dev-admin-password")[0] == 200
 
@@ -218,6 +220,21 @@ def test_a_staff_token_cannot_change_the_admin_password(api, staff):
         staff,
     )
     assert status == 403 and "Admin" in body["error"]
+    # the same answer for a wrong password: a staff token learns nothing here
+    wrong = {"old_password": "not the password", "new_password": "a new long password"}
+    assert api("POST", "/admin/change-password", wrong, staff) == (status, body)
+
+
+def test_a_wrong_admin_password_is_refused_whatever_its_shape(api, admin):
+    toggles = api("GET", "/feature-toggles")[1]
+    assert api("PUT", "/feature-toggles", {**toggles, "passwordProtectAdmin": True}, admin)[0] == 200
+    try:
+        for wrong in ["not the password", "x" * 73, "é" * 40, 123456789012, None]:
+            status, body = api("POST", "/admin/login", {"password": wrong})
+            assert (status, body["error"]) == (401, "Invalid password"), wrong
+        assert api("POST", "/admin/login", {"password": "dev-admin-password"})[0] == 200
+    finally:
+        assert api("PUT", "/feature-toggles", toggles, admin)[0] == 200
 
 
 def test_the_length_rule_also_applies_after_a_password_reset(api):

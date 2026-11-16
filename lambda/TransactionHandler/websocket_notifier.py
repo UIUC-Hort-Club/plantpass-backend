@@ -6,6 +6,11 @@ from botocore.exceptions import ClientError
 
 logger = logging.getLogger()
 
+# The order write waits for this broadcast, so it must stay short however many
+# screens are connected. Only the organizer's sales dashboard listens.
+# shortcut: at most 20 screens get the signal, raise it if an event ever has more dashboards open
+MAX_RECIPIENTS = 20
+
 # Initialize clients
 dynamodb = boto3.resource('dynamodb')
 apigateway_management = None  # Will be initialized when needed
@@ -51,8 +56,7 @@ def notify_transaction_update(event_type):
         
         connections_table = dynamodb.Table(connections_table_name)
         
-        # Get all active connections
-        response = connections_table.scan()
+        response = connections_table.scan(Limit=MAX_RECIPIENTS)
         connections = response.get('Items', [])
         
         if not connections:

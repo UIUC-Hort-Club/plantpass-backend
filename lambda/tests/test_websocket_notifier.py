@@ -31,3 +31,6 @@ def test_a_broadcast_says_only_that_orders_changed(monkeypatch):
     (call,) = client.post_to_connection.call_args_list
     assert call.kwargs["ConnectionId"] == "abc"
     assert json.loads(call.kwargs["Data"]) == {"type": "transaction_update", "event": "created"}
+    # an order waits for this, so it never reads more screens than the cap
+    connections.scan.assert_called_once_with(Limit=notifier.MAX_RECIPIENTS)
+    assert notifier.MAX_RECIPIENTS <= 20

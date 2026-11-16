@@ -64,6 +64,15 @@ def set_password_hash(new_hash):
     )
 
 
+def password_matches(candidate, pw_hash):
+    """False, never an error, for a value bcrypt cannot compare (it refuses more than 72 bytes)."""
+    return (
+        isinstance(candidate, str)
+        and len(candidate.encode()) <= 72
+        and bcrypt.checkpw(candidate.encode(), pw_hash)
+    )
+
+
 def is_password_protect_admin_enabled():
     """
     Read feature toggle from DynamoDB. On error or missing item, default to True (require password).
@@ -110,7 +119,7 @@ def lambda_handler(event, context):
 
             # Check regular password first
             logger.info("Checking regular password...")
-            regular_match = bcrypt.checkpw(password.encode(), pw_hash)
+            regular_match = password_matches(password, pw_hash)
             logger.info(f"Regular password match: {regular_match}")
             
             if regular_match:
@@ -132,7 +141,7 @@ def lambda_handler(event, context):
             logger.info(f"Temp password hash exists: {bool(temp_hash)}")
             
             if temp_hash:
-                temp_match = bcrypt.checkpw(password.encode(), temp_hash.encode())
+                temp_match = password_matches(password, temp_hash.encode())
                 logger.info(f"Temp password match: {temp_match}")
                 
                 if temp_match:
@@ -188,7 +197,7 @@ def lambda_handler(event, context):
             # If using temp token, skip old password check
             if not is_temp:
                 pw_hash = get_password_hash()
-                if not bcrypt.checkpw(old_pw.encode(), pw_hash):
+                if not password_matches(old_pw, pw_hash):
                     return create_response(401, {"error": "Invalid current password"})
 
             new_hash = bcrypt.hashpw(new_pw.encode(), bcrypt.gensalt())

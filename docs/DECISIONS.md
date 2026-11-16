@@ -133,6 +133,11 @@ typos could stop checkout.
 seconds and 256 MB.** One was measured waking from idle in 2.7 seconds against
 a 3-second limit, and the first request after two deploys failed once.
 
+**D29 — 2026-11-16 — "Enter Order" reads "Entering..." and "Complete Order"
+reads "Completing..." while their request runs.** Since the double-tap fix the
+buttons go grey for that moment, and a grey button with unchanged words can
+look dead on a slow connection.
+
 ## Assumed, not asked
 
 Small choices the agent made under D11 rather than put to the architect. They
@@ -152,6 +157,9 @@ are not decisions; strike or change any of them.
   screens never read another event's orders.
 - The clear-all API route is removed along with the "Clear Records" button,
   since a destructive route with no screen is only a risk.
+- A live "orders changed" signal goes to at most 20 open dashboards, so
+  entering an order never waits long on it. Only the organizer's sales
+  dashboard listens today.
 
 ## Open questions
 
