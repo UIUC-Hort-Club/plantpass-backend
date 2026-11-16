@@ -204,7 +204,20 @@ def test_a_new_admin_password_must_be_at_least_twelve_characters(api, admin):
     assert change("twelve chars", "another long one")[0] == 200
     # odd values get a plain refusal, not a server error
     assert change("another long one", "x" * 73)[0] == 400
+    assert change("another long one", "é" * 40)[0] == 400  # 40 characters, 80 bytes
     assert change("another long one", 123456789012)[0] == 400
+    # leave the server as the next test expects to find it
+    assert change("another long one", "dev-admin-password")[0] == 200
+
+
+def test_a_staff_token_cannot_change_the_admin_password(api, staff):
+    status, body = api(
+        "POST",
+        "/admin/change-password",
+        {"old_password": "dev-admin-password", "new_password": "a new long password"},
+        staff,
+    )
+    assert status == 403 and "Admin" in body["error"]
 
 
 def test_the_length_rule_also_applies_after_a_password_reset(api):
@@ -218,6 +231,8 @@ def test_the_length_rule_also_applies_after_a_password_reset(api):
     status, body = api("POST", "/admin/change-password", {"new_password": "elevenchars"}, temporary)
     assert status == 400 and "12" in body["error"]
     assert api("POST", "/admin/change-password", {"new_password": "twelve chars"}, temporary)[0] == 200
+    # leave the server as the other tests expect to find it
+    assert api("POST", "/admin/change-password", {"new_password": "dev-admin-password"}, temporary)[0] == 200
 
 
 def test_forgot_password_can_be_asked_once_a_minute(api):

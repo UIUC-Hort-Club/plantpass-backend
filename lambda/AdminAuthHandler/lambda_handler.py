@@ -169,6 +169,11 @@ def lambda_handler(event, context):
             except:
                 return create_response(401, {"error": "Invalid token"})
 
+            # Staff tokens are signed with the same key; only an admin's may
+            # change the admin password.
+            if decoded.get("role") != "admin":
+                return create_response(403, {"error": "Admin access required"})
+
             old_pw = body.get("old_password", "")
             new_pw = body.get("new_password", "")
 
@@ -178,7 +183,7 @@ def lambda_handler(event, context):
                 })
             # bcrypt reads only the first 72 bytes; refuse rather than cut silently
             if len(new_pw.encode()) > 72:
-                return create_response(400, {"error": "New password must be 72 characters or fewer"})
+                return create_response(400, {"error": "New password is too long (72 bytes at most)"})
 
             # If using temp token, skip old password check
             if not is_temp:
